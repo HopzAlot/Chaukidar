@@ -6,9 +6,48 @@ from sqlalchemy.orm import Session
 from app.agents.audit_runner import run_audit
 from app.database import SessionLocal, get_db
 from app.models.audit import AuditResult, AuditRun
+from app.models.prompt import HarmCategory, Prompt
 from app.schemas.audit import AuditResultRead, AuditRunCreate, AuditRunRead
 
 router = APIRouter(prefix="/api/audits", tags=["audits"])
+
+
+def serialize_audit(audit: AuditRun) -> dict:
+    return {
+        "id": audit.id,
+        "target_model_id": audit.target_model_id,
+        "name": audit.name,
+        "languages": json.loads(audit.languages),
+        "harm_categories": json.loads(audit.harm_categories),
+        "include_translation_track": audit.include_translation_track,
+        "include_native_track": audit.include_native_track,
+        "status": audit.status,
+        "progress_current": audit.progress_current,
+        "progress_total": audit.progress_total,
+        "started_at": audit.started_at,
+        "completed_at": audit.completed_at,
+        "created_at": audit.created_at,
+    }
+
+
+def serialize_result(result: AuditResult, prompt: Prompt | None, category: HarmCategory | None) -> dict:
+    return {
+        "id": result.id,
+        "audit_run_id": result.audit_run_id,
+        "prompt_id": result.prompt_id,
+        "seed_id": prompt.source_seed_id if prompt else None,
+        "harm_category": category.key if category else None,
+        "harm_category_display": category.display_name if category else None,
+        "language": prompt.language if prompt else None,
+        "track": prompt.track if prompt else None,
+        "intent_summary": prompt.intent_summary if prompt else None,
+        "label": result.label,
+        "confidence": result.confidence,
+        "judge_explanation": result.judge_explanation,
+        "risk_score": result.risk_score,
+        "latency_ms": result.latency_ms,
+        "created_at": result.created_at,
+    }
 
 
 async def run_audit_task(audit_id: int) -> None:
@@ -32,7 +71,7 @@ def create_audit(payload: AuditRunCreate, db: Session = Depends(get_db)):
     db.add(audit)
     db.commit()
     db.refresh(audit)
-    return audit
+    return serialize_audit(audit)
 
 
 @router.post("/{audit_id}/run")
@@ -49,9 +88,17 @@ def get_audit(audit_id: int, db: Session = Depends(get_db)):
     audit = db.get(AuditRun, audit_id)
     if audit is None:
         raise HTTPException(status_code=404, detail="Audit not found")
-    return audit
+    return serialize_audit(audit)
 
 
 @router.get("/{audit_id}/results", response_model=list[AuditResultRead])
 def get_results(audit_id: int, db: Session = Depends(get_db)):
-    return db.query(AuditResult).filter(AuditResult.audit_run_id == audit_id).all()
+    rows = (
+        db.query(AuditResult, Prompt, HarmCategory)
+        .join(Prompt, AuditResult.prompt_id == Prompt.id)
+        .join(HarmCategory, Prompt.harm_category_id == HarmCategory.id)
+        .filter(AuditResult.audit_run_id == audit_id)
+        .order_by(AuditResult.id)
+        .all()
+    )
+    return [serialize_result(result, prompt, category) for result, prompt, category in rows]

@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
 
 from app.database import Base
 
@@ -9,20 +8,20 @@ from app.database import Base
 class HarmCategory(Base):
     __tablename__ = "harm_categories"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    key: Mapped[str] = mapped_column(String(80), unique=True)
-    display_name: Mapped[str] = mapped_column(String(160))
+    id = Column(Integer, primary_key=True)
+    key = Column(String(80), unique=True, nullable=False)
+    display_name = Column(String(160), nullable=False)
 
 
 class Prompt(Base):
     __tablename__ = "prompts"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    harm_category_id: Mapped[int] = mapped_column(ForeignKey("harm_categories.id"))
-    language: Mapped[str] = mapped_column(String(40))
-    track: Mapped[str] = mapped_column(String(40))
-    prompt_text: Mapped[str] = mapped_column(Text)
-    intent_summary: Mapped[str] = mapped_column(Text)
-    source_seed_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    risk_level_hint: Mapped[str] = mapped_column(String(40), default="medium")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    id = Column(Integer, primary_key=True)
+    harm_category_id = Column(Integer, ForeignKey("harm_categories.id"), nullable=False)
+    language = Column(String(40), nullable=False)
+    track = Column(String(40), nullable=False)
+    prompt_text = Column(Text, nullable=False)
+    intent_summary = Column(Text, nullable=False)
+    source_seed_id = Column(String(120), nullable=True)
+    risk_level_hint = Column(String(40), default="medium")
+    created_at = Column(DateTime, default=datetime.utcnow)

@@ -1,5 +1,9 @@
 import json
+import sys
 from pathlib import Path
+
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(BACKEND_ROOT))
 
 from app.database import Base, SessionLocal, engine
 from app.models.prompt import HarmCategory, Prompt
@@ -7,8 +11,7 @@ from app.models.target import TargetModel
 from app.utils.sanitizer import validate_sanitized_prompt
 
 
-ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = ROOT / "app" / "data"
+DATA_DIR = BACKEND_ROOT / "app" / "data"
 
 CATEGORIES = {
     "cyber_abuse": "Cyber Abuse",

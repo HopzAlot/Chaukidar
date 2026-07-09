@@ -29,6 +29,12 @@ class AuditResultRead(BaseModel):
     id: int
     audit_run_id: int
     prompt_id: int
+    seed_id: str | None = None
+    harm_category: str | None = None
+    harm_category_display: str | None = None
+    language: str | None = None
+    track: str | None = None
+    intent_summary: str | None = None
     label: str
     confidence: float
     judge_explanation: str

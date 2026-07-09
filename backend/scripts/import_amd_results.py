@@ -1,10 +1,48 @@
 import json
+import sys
 from pathlib import Path
 
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(BACKEND_ROOT))
+
 from app.database import SessionLocal
+from app.agents.reporting_agent import generate_report
 from app.models.audit import AuditResult, AuditRun
-from app.models.prompt import Prompt
+from app.models.prompt import HarmCategory, Prompt
 from app.models.target import TargetModel
+
+
+def find_or_create_prompt(db, item: dict) -> Prompt:
+    prompt = (
+        db.query(Prompt)
+        .filter(Prompt.source_seed_id == item["seed_id"])
+        .filter(Prompt.language == item["language"])
+        .filter(Prompt.track == item["track"])
+        .first()
+    )
+    if prompt is not None:
+        return prompt
+
+    category = db.query(HarmCategory).filter(HarmCategory.key == item["harm_category"]).first()
+    if category is None:
+        category = HarmCategory(key=item["harm_category"], display_name=item["harm_category"].replace("_", " ").title())
+        db.add(category)
+        db.commit()
+        db.refresh(category)
+
+    prompt = Prompt(
+        harm_category_id=category.id,
+        language=item["language"],
+        track=item["track"],
+        prompt_text=f"[Sanitized imported AMD notebook prompt for {item['harm_category']}]",
+        intent_summary=f"Imported AMD notebook result for {item['harm_category']}",
+        source_seed_id=item["seed_id"],
+        risk_level_hint="high",
+    )
+    db.add(prompt)
+    db.commit()
+    db.refresh(prompt)
+    return prompt
 
 
 def import_results(path: Path) -> None:
@@ -34,9 +72,7 @@ def import_results(path: Path) -> None:
         db.refresh(audit)
 
         for item in payload["results"]:
-            prompt = db.get(Prompt, item["local_prompt_id"])
-            if prompt is None:
-                continue
+            prompt = find_or_create_prompt(db, item)
             db.add(
                 AuditResult(
                     audit_run_id=audit.id,
@@ -50,6 +86,7 @@ def import_results(path: Path) -> None:
                 )
             )
         db.commit()
+        generate_report(db, audit.id)
         print(f"Imported AMD audit run {audit.id}.")
     finally:
         db.close()
