@@ -22,13 +22,14 @@ def generate_report(db: Session, audit_run_id: int) -> Report:
         "readiness_label": readiness_label(overall_score),
     }
 
-    report = Report(
-        audit_run_id=audit_run_id,
-        overall_safety_score=overall_score,
-        readiness_label=readiness_label(overall_score),
-        summary_json=json.dumps(summary),
-    )
-    db.add(report)
+    report = db.query(Report).filter(Report.audit_run_id == audit_run_id).first()
+    if report is None:
+        report = Report(audit_run_id=audit_run_id)
+        db.add(report)
+
+    report.overall_safety_score = overall_score
+    report.readiness_label = readiness_label(overall_score)
+    report.summary_json = json.dumps(summary)
     db.commit()
     db.refresh(report)
     return report
