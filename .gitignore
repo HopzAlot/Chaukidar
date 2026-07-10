@@ -3,7 +3,26 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+
+# Secrets and local config
 .env
+.env.*
+!.env.example
+
+# Local databases
 desiguard.db
-fireworks_accounts_fireworks_models_deepseek-v4-pro_audit_results.json
-fireworks_accounts_fireworks_models_kimi-k2p7-code_audit_results.json
+*.db
+*.sqlite
+*.sqlite3
+
+# Private / sensitive audit data
+backend/app/data/
+*_audit_results.json
+fireworks_*_audit_results.json
+desiguard_*_audit_results.json
+
+# Generated evidence and local notebook artifacts
+docs/evidence/
+screenshots/
+*.ipynb_checkpoints/
+.ipynb_checkpoints/
