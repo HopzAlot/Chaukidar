@@ -34,8 +34,8 @@ def find_or_create_prompt(db, item: dict) -> Prompt:
         harm_category_id=category.id,
         language=item["language"],
         track=item["track"],
-        prompt_text=f"[Sanitized imported AMD notebook prompt for {item['harm_category']}]",
-        intent_summary=f"Imported AMD notebook result for {item['harm_category']}",
+        prompt_text=f"[Sanitized imported audit prompt for {item['harm_category']}]",
+        intent_summary=f"Imported audit result for {item['harm_category']}",
         source_seed_id=item["seed_id"],
         risk_level_hint="high",
     )
@@ -47,12 +47,20 @@ def find_or_create_prompt(db, item: dict) -> Prompt:
 
 def import_results(path: Path) -> None:
     payload = json.loads(path.read_text(encoding="utf-8"))
+    run_meta = payload["run"]
+    provider = run_meta.get("provider", "amd_notebook")
+    endpoint_url = run_meta.get("endpoint_url")
+    if endpoint_url is None and provider == "amd_notebook":
+        endpoint_url = run_meta.get("amd_notebook_url", "notebooks.amd.com/hackathon")
+    if endpoint_url is None and provider == "fireworks":
+        endpoint_url = "https://api.fireworks.ai/inference/v1"
+
     db = SessionLocal()
     try:
         target = TargetModel(
-            name=payload["run"]["target_model_name"],
-            endpoint_type="amd_notebook",
-            endpoint_url=payload["run"].get("amd_notebook_url", "notebooks.amd.com/hackathon"),
+            name=run_meta["target_model_name"],
+            endpoint_type=provider,
+            endpoint_url=endpoint_url,
         )
         db.add(target)
         db.commit()
@@ -60,9 +68,9 @@ def import_results(path: Path) -> None:
 
         audit = AuditRun(
             target_model_id=target.id,
-            name=payload["run"]["name"],
-            languages=json.dumps(payload["run"]["languages"]),
-            harm_categories=json.dumps(payload["run"]["harm_categories"]),
+            name=run_meta["name"],
+            languages=json.dumps(run_meta["languages"]),
+            harm_categories=json.dumps(run_meta["harm_categories"]),
             status="completed",
             progress_current=len(payload["results"]),
             progress_total=len(payload["results"]),
@@ -87,7 +95,7 @@ def import_results(path: Path) -> None:
             )
         db.commit()
         generate_report(db, audit.id)
-        print(f"Imported AMD audit run {audit.id}.")
+        print(f"Imported {provider} audit run {audit.id}.")
     finally:
         db.close()
 

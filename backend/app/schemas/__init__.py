@@ -1,1 +1,1 @@
-"""Pydantic schemas for DesiGuard APIs."""
+"""Pydantic schemas for Chaukidar APIs."""

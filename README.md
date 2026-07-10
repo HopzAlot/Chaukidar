@@ -1,12 +1,12 @@
-# DesiGuard
+# Chaukidar
 
-DesiGuard is a multilingual AI safety audit platform for South Asian languages. It tests whether LLMs and RAG chatbots remain safe in Urdu, Punjabi, Pashto, and Sindhi, comparing simple translation-based tests against native/culturally adapted red-team prompts.
+Chaukidar is a multilingual AI safety audit platform for South Asian languages. It tests whether LLMs and RAG chatbots remain safe in Urdu, Punjabi, Pashto, and Sindhi, comparing simple translation-based tests against native/culturally adapted red-team prompts.
 
 ## Why It Matters
 
 Most LLM safety evaluation is English-heavy. A model may refuse harmful requests in English but behave differently when the same intent appears in low-resource South Asian languages, local idioms, Roman Urdu, mixed language, or native scripts.
 
-DesiGuard is framed as B2B safety infrastructure for companies deploying chatbots in South Asian markets: fintech, edtech, banks, telecoms, healthtech, government services, and enterprise SaaS.
+Chaukidar is framed as B2B safety infrastructure for companies deploying chatbots in South Asian markets: fintech, edtech, banks, telecoms, healthtech, government services, and enterprise SaaS.
 
 ## Hackathon Track
 
@@ -17,7 +17,7 @@ The AMD story is scalable multilingual audit inference:
 - batch audit prompts
 - run open-source model inference on AMD ROCm/Jupyter compute
 - measure latency and throughput
-- import AMD-generated results into DesiGuard
+- import AMD-generated results into Chaukidar
 - generate compliance-style risk summaries
 
 ## Current Scope
@@ -83,7 +83,7 @@ http://localhost:8000/docs
 
 ## AMD Notebook Workflow
 
-Use `amd_notebooks/desiguard_amd_audit.ipynb` on the hackathon Jupyter instance.
+Use `amd_notebooks/chaukidar_amd_audit.ipynb` on the hackathon Jupyter instance.
 
 The notebook should:
 
@@ -109,4 +109,4 @@ The backend can later import the notebook JSON into SQLite.
 
 ## Pitch
 
-English-only AI safety is not enough. Companies deploying LLMs in South Asia need to know whether their systems remain safe in Urdu, Punjabi, Pashto, and Sindhi. DesiGuard compares translation-based testing against native culturally adapted red-teaming, runs scalable audits on AMD compute, and generates compliance-grade risk reports.
+English-only AI safety is not enough. Companies deploying LLMs in South Asia need to know whether their systems remain safe in Urdu, Punjabi, Pashto, and Sindhi. Chaukidar compares translation-based testing against native culturally adapted red-teaming, runs scalable audits on AMD compute, and generates compliance-grade risk reports.

@@ -1,6 +1,6 @@
-# DesiGuard AMD Benchmarks
+# Chaukidar AMD Benchmarks
 
-Fill this with numbers from `amd_notebooks/desiguard_amd_audit.ipynb`.
+Fill this with numbers from `amd_notebooks/chaukidar_amd_audit.ipynb`.
 
 | Date | Platform | Model | Prompt Count | p50 Latency | p95 Latency | Throughput |
 | --- | --- | --- | ---: | ---: | ---: | ---: |

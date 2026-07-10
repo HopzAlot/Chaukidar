@@ -1,1 +1,1 @@
-"""DesiGuard backend package."""
+"""Chaukidar backend package."""

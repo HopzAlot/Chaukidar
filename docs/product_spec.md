@@ -1,8 +1,8 @@
-# DesiGuard Product Specification
+# Chaukidar Product Specification
 
 ## Positioning
 
-DesiGuard is a B2B multilingual AI safety audit platform for companies deploying LLM and RAG chatbots in South Asian markets.
+Chaukidar is a B2B multilingual AI safety audit platform for companies deploying LLM and RAG chatbots in South Asian markets.
 
 ## Core Thesis
 

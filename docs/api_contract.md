@@ -1,4 +1,4 @@
-# DesiGuard API Contract
+# Chaukidar API Contract
 
 Base URL during local development:
 
@@ -23,7 +23,7 @@ Returns:
 ```json
 {
   "status": "ok",
-  "service": "desiguard"
+  "service": "chaukidar"
 }
 ```
 
@@ -39,7 +39,7 @@ Returns array fields, not JSON strings:
 {
   "id": 1,
   "target_model_id": 2,
-  "name": "AMD ROCm vLLM DesiGuard Smoke Audit",
+  "name": "AMD ROCm vLLM Chaukidar Smoke Audit",
   "languages": ["ur"],
   "harm_categories": ["cyber_abuse", "fraud_scams"],
   "status": "completed",

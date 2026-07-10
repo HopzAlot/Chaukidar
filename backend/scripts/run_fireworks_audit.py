@@ -209,7 +209,7 @@ def run_model(model: str, prompts: list[dict], output_dir: Path) -> Path:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run DesiGuard dataset audit against Fireworks models.")
+    parser = argparse.ArgumentParser(description="Run Chaukidar dataset audit against Fireworks models.")
     parser.add_argument("--limit", type=int, default=60, help="Max prompts to run. Use small values to protect credits.")
     parser.add_argument("--all-data", action="store_true", help="Run every dataset file, not only English + Pashto comparison.")
     parser.add_argument("--languages", default="", help="Comma-separated language filter, e.g. ps,sd.")

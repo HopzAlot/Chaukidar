@@ -74,7 +74,7 @@ def main() -> None:
                 )
             )
         db.commit()
-        print("Seeded DesiGuard database.")
+        print("Seeded Chaukidar database.")
     finally:
         db.close()
 

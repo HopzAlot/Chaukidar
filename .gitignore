@@ -10,7 +10,7 @@ venv/
 !.env.example
 
 # Local databases
-desiguard.db
+chaukidar.db
 *.db
 *.sqlite
 *.sqlite3
@@ -19,7 +19,7 @@ desiguard.db
 backend/app/data/
 *_audit_results.json
 fireworks_*_audit_results.json
-desiguard_*_audit_results.json
+chaukidar_*_audit_results.json
 
 # Generated evidence and local notebook artifacts
 docs/evidence/

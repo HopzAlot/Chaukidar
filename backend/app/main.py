@@ -6,7 +6,7 @@ from app.routers import audits, reports, targets
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="DesiGuard API",
+    title="Chaukidar API",
     description="Multilingual AI safety audit backend for South Asian languages.",
     version="0.1.0",
 )
@@ -18,4 +18,4 @@ app.include_router(reports.router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "desiguard"}
+    return {"status": "ok", "service": "chaukidar"}

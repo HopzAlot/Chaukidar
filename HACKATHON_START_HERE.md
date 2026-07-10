@@ -1,4 +1,4 @@
-# DesiGuard Hackathon Start Here
+# Chaukidar Hackathon Start Here
 
 ## Track 3 Reality Check
 
@@ -13,11 +13,11 @@ That means:
 
 Fireworks API can be used as a temporary development fallback, but it is not the core story for Track 3. The core story should be:
 
-> DesiGuard runs multilingual AI safety audits at scale using vLLM served on AMD ROCm / MI300X-class compute.
+> Chaukidar runs multilingual AI safety audits at scale using vLLM served on AMD ROCm / MI300X-class compute.
 
 ## What You Are Building
 
-DesiGuard is a multilingual AI safety audit platform for South Asian languages.
+Chaukidar is a multilingual AI safety audit platform for South Asian languages.
 
 The product question is:
 
@@ -73,7 +73,7 @@ The architecture should be:
 ```text
 Next.js UI
   -> FastAPI backend
-  -> DesiGuard audit agents
+  -> Chaukidar audit agents
   -> OpenAI-compatible vLLM endpoint
   -> AMD ROCm GPU instance
 ```
@@ -125,7 +125,7 @@ curl http://localhost:8000/v1/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "Qwen/Qwen2-7B-Instruct",
-    "prompt": "Say hello from DesiGuard in one sentence.",
+    "prompt": "Say hello from Chaukidar in one sentence.",
     "max_tokens": 64,
     "temperature": 0.2
   }'
