@@ -136,6 +136,14 @@ body {
   0%, 100% { transform: translate(0, 0) rotate(0); }
   45% { transform: translate(-7px, -12px) rotate(-12deg); }
 }
+@keyframes mascot-chase-stick {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(5deg); }
+}
+@keyframes mascot-chase-arm {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
 
 .mascot-sway {
   animation: mascot-sway 3.6s ease-in-out infinite;
@@ -155,6 +163,20 @@ body {
 }
 .mascot-whistle-blowing {
   animation: mascot-whistle-blow 0.55s ease-in-out;
+}
+.mascot-whistle-chasing {
+  transform: translate(-28px, 3px) rotate(-12deg);
+}
+.mascot-raised-stick {
+  transform-box: fill-box;
+  transform-origin: 39px 130px;
+  animation: mascot-chase-stick 380ms ease-in-out infinite;
+}
+.mascot-stick-arm,
+.mascot-whistle-arm {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascot-chase-arm 380ms ease-in-out infinite;
 }
 .mascot-shoe {
   transform-box: fill-box;

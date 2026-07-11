@@ -249,6 +249,7 @@ export default function Mascot() {
   }, []);
 
   const angry = mode === 'chasing';
+  const whistleActive = blowing || angry;
   const interactive = mode === 'hanging';
 
   return (
@@ -294,30 +295,22 @@ export default function Mascot() {
                 </linearGradient>
               </defs>
 
-              {/* Wooden side-handle guard stick, based on a traditional lathi. */}
-              <path
-                d="M27 202 L42 58"
-                fill="none"
-                stroke="#3F2616"
-                strokeWidth="9"
-                strokeLinecap="round"
-              />
-              <path
-                d="M27 202 L42 58"
-                fill="none"
-                stroke="#9A6238"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-              <path d="M39 79 L60 68" fill="none" stroke="#3F2616" strokeWidth="11" strokeLinecap="round" />
-              <path d="M39 79 L60 68" fill="none" stroke="#9A6238" strokeWidth="4" strokeLinecap="round" />
-              <ellipse cx="62" cy="67" rx="6" ry="7" fill="#704326" stroke="#3F2616" strokeWidth="2" transform="rotate(62 62 67)" />
-              <g stroke="#D8A779" strokeWidth="1.5" opacity="0.85">
-                <path d="M39 65 L45 66" />
-                <path d="M38 70 L44 71" />
-                <path d="M47 75 L51 80" />
-                <path d="M52 72 L56 77" />
-              </g>
+              {/* Baton ends at the fist; during a chase it is raised overhead. */}
+              {angry ? (
+                <g className="mascot-raised-stick">
+                  <path d="M38 130 L73 37" fill="none" stroke="#27282C" strokeWidth="10" strokeLinecap="round" />
+                  <path d="M38 130 L73 37" fill="none" stroke="#5F6269" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M34 130 L42 133" stroke="#16171A" strokeWidth="2" />
+                  <path d="M37 123 L45 126" stroke="#16171A" strokeWidth="2" />
+                </g>
+              ) : (
+                <g>
+                  <path d="M34 148 L25 52" fill="none" stroke="#27282C" strokeWidth="10" strokeLinecap="round" />
+                  <path d="M34 148 L25 52" fill="none" stroke="#5F6269" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M31 142 L38 141" stroke="#16171A" strokeWidth="2" />
+                  <path d="M30 135 L37 134" stroke="#16171A" strokeWidth="2" />
+                </g>
+              )}
 
               {/* floating shoes — detached, bobbing independently below the body */}
               <g className="mascot-shoe" style={{ animationDelay: '0s' }}>
@@ -352,8 +345,14 @@ export default function Mascot() {
                 strokeWidth="2.5"
               />
 
-              {/* right arm: salute on hover, relaxed wave otherwise */}
-              {saluting ? (
+              {/* right arm: whistle at mouth while chasing, salute on hover. */}
+              {angry ? (
+                <g className="mascot-whistle-arm">
+                  <path d="M99 148 Q91 151 83 145 Q78 141 76 137" fill="none" stroke="#3B4696" strokeWidth="17" strokeLinecap="round" />
+                  <path d="M99 148 Q91 151 83 145 Q78 141 76 137" fill="none" stroke="#7482D6" strokeWidth="12" strokeLinecap="round" />
+                  <ellipse cx="76" cy="137" rx="8" ry="6" fill="#7482D6" stroke="#3B4696" strokeWidth="2.5" transform="rotate(24 76 137)" />
+                </g>
+              ) : saluting ? (
                 <g className="mascot-salute">
                   <path d="M99 148 Q112 137 108 123 Q105 113 98 106" fill="none" stroke="#3B4696" strokeWidth="17" strokeLinecap="round" />
                   <path d="M99 148 Q112 137 108 123 Q105 113 98 106" fill="none" stroke="#7482D6" strokeWidth="12" strokeLinecap="round" />
@@ -375,12 +374,42 @@ export default function Mascot() {
                 />
               )}
 
-              {/* left arm/fist — grips the stick shaft */}
-              <ellipse cx="33" cy="146" rx="12" ry="9" fill="#7482D6" stroke="#3B4696" strokeWidth="2.5" />
+              {/* left arm and wrapped fist genuinely grip the baton handle. */}
+              {angry ? (
+                <g className="mascot-stick-arm">
+                  <path d="M38 151 Q28 143 37 130" fill="none" stroke="#3B4696" strokeWidth="17" strokeLinecap="round" />
+                  <path d="M38 151 Q28 143 37 130" fill="none" stroke="#7482D6" strokeWidth="12" strokeLinecap="round" />
+                  <ellipse cx="39" cy="130" rx="10" ry="8" fill="#7482D6" stroke="#3B4696" strokeWidth="2.5" transform="rotate(-18 39 130)" />
+                  <g stroke="#AAB4F2" strokeWidth="1.5" strokeLinecap="round">
+                    <path d="M32 126 L44 130" />
+                    <path d="M32 130 L43 134" />
+                    <path d="M34 134 L41 136" />
+                  </g>
+                  <path d="M44 124 Q49 128 45 134" fill="none" stroke="#3B4696" strokeWidth="2" strokeLinecap="round" />
+                </g>
+              ) : (
+                <g>
+                  <path d="M43 151 Q38 148 34 145" fill="none" stroke="#3B4696" strokeWidth="15" strokeLinecap="round" />
+                  <path d="M43 151 Q38 148 34 145" fill="none" stroke="#7482D6" strokeWidth="10" strokeLinecap="round" />
+                  <ellipse cx="34" cy="145" rx="10" ry="8" fill="#7482D6" stroke="#3B4696" strokeWidth="2.5" transform="rotate(-6 34 145)" />
+                  <g stroke="#AAB4F2" strokeWidth="1.5" strokeLinecap="round">
+                    <path d="M27 141 L40 141" />
+                    <path d="M26 145 L40 145" />
+                    <path d="M28 149 L39 149" />
+                  </g>
+                  <path d="M40 138 Q45 143 41 149" fill="none" stroke="#3B4696" strokeWidth="2" strokeLinecap="round" />
+                </g>
+              )}
 
               {/* Metal referee-style whistle on a neck cord. */}
-              <path d="M72 103 C92 108 104 124 105 141" fill="none" stroke="#283164" strokeWidth="2" strokeLinecap="round" />
-              <g className={blowing ? 'mascot-whistle mascot-whistle-blowing' : 'mascot-whistle'}>
+              <path
+                d={angry ? 'M72 103 C84 112 82 126 78 138' : 'M72 103 C92 108 104 124 105 141'}
+                fill="none"
+                stroke="#283164"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <g className={angry ? 'mascot-whistle mascot-whistle-chasing' : blowing ? 'mascot-whistle mascot-whistle-blowing' : 'mascot-whistle'}>
                 <path d="M91 138 L105 136 L109 143 L95 148 Z" fill="url(#whistleMetal)" stroke="#555E6B" strokeWidth="1.8" strokeLinejoin="round" />
                 <rect x="92" y="139" width="4" height="8" rx="1" fill="#20242B" transform="rotate(-12 94 143)" />
                 <circle cx="110" cy="143" r="7" fill="url(#whistleMetal)" stroke="#555E6B" strokeWidth="1.8" />
@@ -388,10 +417,12 @@ export default function Mascot() {
                 <path d="M104 136 Q111 132 117 137" fill="none" stroke="#F7F9FC" strokeWidth="2" strokeLinecap="round" />
                 <circle cx="116" cy="134" r="2.5" fill="none" stroke="#727C89" strokeWidth="1.5" />
               </g>
-              {blowing && (
-                <g className="whistle-note">
-                  <path d="M118 137 Q126 134 128 127" fill="none" stroke="#E23F8E" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M120 144 Q130 142 132 135" fill="none" stroke="#EC5FA3" strokeWidth="2" strokeLinecap="round" />
+              {whistleActive && (
+                <g transform={angry ? 'translate(-28 3)' : undefined}>
+                  <g className="whistle-note">
+                    <path d="M118 137 Q126 134 128 127" fill="none" stroke="#E23F8E" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M120 144 Q130 142 132 135" fill="none" stroke="#EC5FA3" strokeWidth="2" strokeLinecap="round" />
+                  </g>
                 </g>
               )}
 
