@@ -7,18 +7,18 @@ type Mode = 'hanging' | 'chasing' | 'returning' | 'patrolling';
 // --- Tunable constants -----------------------------------------------
 // The character is drawn in a 136×235 viewBox and rendered at DISPLAY_W ×
 // DISPLAY_H on screen. These offsets say "where, in screen pixels, is the
-// cane-hook / body-center relative to the wrapper's top-left corner" so we
-// can dock the hook exactly onto the logo, or center the body on the
+// dock point / body-center relative to the wrapper's top-left corner" so we
+// can place him beside the logo, or center the body on the
 // cursor. They're hand-estimated (no way to render a live browser in this
-// environment) — nudge them if the hook doesn't sit exactly on the badge.
+// environment) — nudge them if he doesn't sit neatly beside the badge.
 const DISPLAY_W = 80;
 const DISPLAY_H = 138;
-const HOOK_OFFSET = { x: 29, y: 12 }; // cane hook catch-point, from wrapper top-left
+const DOCK_OFFSET = { x: 29, y: 12 };
 const BODY_OFFSET = { x: 40, y: 96 }; // body/face center, from wrapper top-left
 
 const EYE_MOVE_RANGE = 6; // svg user units the pupils can drift
 const IDLE_MOUSE_MS = 900; // how long the cursor must sit still before the chase ends
-const HOVER_DELAY_MS = 1000; // how long you must hover before he greets you
+const HOVER_DELAY_MS = 180;
 
 function getAnchorPoint() {
   if (typeof document === 'undefined') return null;
@@ -53,6 +53,7 @@ export default function Mascot() {
 
   const [pupil, setPupil] = useState({ x: 0, y: 0 });
   const [bubbleVisible, setBubbleVisible] = useState(false);
+  const [saluting, setSaluting] = useState(false);
   const [blowing, setBlowing] = useState(false);
   const [, setFacing] = useState<1 | -1>(1);
 
@@ -124,7 +125,7 @@ export default function Mascot() {
 
       if (m === 'hanging') {
         if (anchor) {
-          const target = { x: anchor.x - HOOK_OFFSET.x, y: anchor.y - HOOK_OFFSET.y };
+          const target = { x: anchor.x - DOCK_OFFSET.x, y: anchor.y - DOCK_OFFSET.y };
           if (!initializedRef.current) {
             posRef.current = { ...target };
             initializedRef.current = true;
@@ -166,7 +167,7 @@ export default function Mascot() {
         }
       } else if (m === 'returning') {
         if (anchor) {
-          const target = { x: anchor.x - HOOK_OFFSET.x, y: anchor.y - HOOK_OFFSET.y };
+          const target = { x: anchor.x - DOCK_OFFSET.x, y: anchor.y - DOCK_OFFSET.y };
           lerp(posRef.current, target, 0.09);
           const dist = Math.hypot(posRef.current.x - target.x, posRef.current.y - target.y);
           const dx = target.x - posRef.current.x;
@@ -222,15 +223,20 @@ export default function Mascot() {
 
   function handleMouseEnter() {
     if (mode !== 'hanging') return;
-    hoverTimerRef.current = setTimeout(() => setBubbleVisible(true), HOVER_DELAY_MS);
+    hoverTimerRef.current = setTimeout(() => {
+      setBubbleVisible(true);
+      setSaluting(true);
+    }, HOVER_DELAY_MS);
   }
   function handleMouseLeave() {
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     setBubbleVisible(false);
+    setSaluting(false);
   }
   function handleClick() {
     if (mode !== 'hanging') return;
     setBubbleVisible(false);
+    setSaluting(false);
     jumpStartRef.current = Date.now();
     lastMoveRef.current = Date.now();
     setMode('chasing');
@@ -253,10 +259,10 @@ export default function Mascot() {
     >
       {/* speech bubble — sibling of the swaying body so it stays upright */}
       <div className={`speech-bubble ${bubbleVisible ? 'speech-bubble-visible' : ''}`}>
-        Salam Sahab!!
+        Salam sahab! Allahrakha on duty
       </div>
 
-      <div className={mode === 'hanging' ? 'mascot-sway' : ''} style={{ transformOrigin: '50% 0%' }}>
+      <div className={mode === 'hanging' ? 'mascot-sway' : ''} style={{ transformOrigin: '50% 50%' }}>
         <div ref={facingWrapRef} style={{ transformOrigin: '50% 50%' }}>
           <button
             ref={hitAreaRef}
@@ -280,23 +286,38 @@ export default function Mascot() {
                   <stop offset="0" stopColor="#8E9CEC" />
                   <stop offset="1" stopColor="#5C6DCB" />
                 </linearGradient>
+                <linearGradient id="whistleMetal" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stopColor="#F7F9FC" />
+                  <stop offset="0.45" stopColor="#B7C0CC" />
+                  <stop offset="0.72" stopColor="#FFFFFF" />
+                  <stop offset="1" stopColor="#7E8794" />
+                </linearGradient>
               </defs>
 
-              {/* cane: hook catches the logo when hanging, shaft held in the left hand */}
+              {/* Wooden side-handle guard stick, based on a traditional lathi. */}
               <path
-                d="M33 146 L33 50 C33 26 55 18 64 32 C69 41 58 50 46 43"
+                d="M27 202 L42 58"
                 fill="none"
-                stroke="#5A3420"
-                strokeWidth="7"
+                stroke="#3F2616"
+                strokeWidth="9"
                 strokeLinecap="round"
               />
               <path
-                d="M33 146 L33 50 C33 26 55 18 64 32 C69 41 58 50 46 43"
+                d="M27 202 L42 58"
                 fill="none"
-                stroke="#7A4C2E"
+                stroke="#9A6238"
                 strokeWidth="3"
                 strokeLinecap="round"
               />
+              <path d="M39 79 L60 68" fill="none" stroke="#3F2616" strokeWidth="11" strokeLinecap="round" />
+              <path d="M39 79 L60 68" fill="none" stroke="#9A6238" strokeWidth="4" strokeLinecap="round" />
+              <ellipse cx="62" cy="67" rx="6" ry="7" fill="#704326" stroke="#3F2616" strokeWidth="2" transform="rotate(62 62 67)" />
+              <g stroke="#D8A779" strokeWidth="1.5" opacity="0.85">
+                <path d="M39 65 L45 66" />
+                <path d="M38 70 L44 71" />
+                <path d="M47 75 L51 80" />
+                <path d="M52 72 L56 77" />
+              </g>
 
               {/* floating shoes — detached, bobbing independently below the body */}
               <g className="mascot-shoe" style={{ animationDelay: '0s' }}>
@@ -331,31 +352,46 @@ export default function Mascot() {
                 strokeWidth="2.5"
               />
 
-              {/* right arm — free, waves gently only while hanging */}
-              <ellipse
-                cx="103"
-                cy="146"
-                rx="13"
-                ry="7.5"
-                fill="#7482D6"
-                stroke="#3B4696"
-                strokeWidth="2.5"
-                transform="rotate(24 103 146)"
-                className={mode === 'hanging' ? 'mascot-wave' : ''}
-                style={{ transformOrigin: '103px 146px' }}
-              />
+              {/* right arm: salute on hover, relaxed wave otherwise */}
+              {saluting ? (
+                <g className="mascot-salute">
+                  <path d="M99 148 Q112 137 108 123 Q105 113 98 106" fill="none" stroke="#3B4696" strokeWidth="17" strokeLinecap="round" />
+                  <path d="M99 148 Q112 137 108 123 Q105 113 98 106" fill="none" stroke="#7482D6" strokeWidth="12" strokeLinecap="round" />
+                  <ellipse cx="94" cy="104" rx="9" ry="6" fill="#7482D6" stroke="#3B4696" strokeWidth="2.5" transform="rotate(-18 94 104)" />
+                  <path d="M88 101 L102 106" stroke="#AAB4F2" strokeWidth="1.6" strokeLinecap="round" />
+                </g>
+              ) : (
+                <ellipse
+                  cx="103"
+                  cy="146"
+                  rx="13"
+                  ry="7.5"
+                  fill="#7482D6"
+                  stroke="#3B4696"
+                  strokeWidth="2.5"
+                  transform="rotate(24 103 146)"
+                  className={mode === 'hanging' ? 'mascot-wave' : ''}
+                  style={{ transformOrigin: '103px 146px' }}
+                />
+              )}
 
-              {/* left arm/fist — grips the cane shaft */}
+              {/* left arm/fist — grips the stick shaft */}
               <ellipse cx="33" cy="146" rx="12" ry="9" fill="#7482D6" stroke="#3B4696" strokeWidth="2.5" />
 
-              {/* whistle, side of the face, on a short cord */}
-              <path d="M96 122 Q108 128 104 138" fill="none" stroke="#3B4696" strokeWidth="2" />
-              <rect x="99" y="136" width="9" height="15" rx="3.5" fill="#D7DCEE" stroke="#3B4696" strokeWidth="2" />
-              <circle cx="103.5" cy="149" r="2" fill="#3B4696" />
+              {/* Metal referee-style whistle on a neck cord. */}
+              <path d="M72 103 C92 108 104 124 105 141" fill="none" stroke="#283164" strokeWidth="2" strokeLinecap="round" />
+              <g className={blowing ? 'mascot-whistle mascot-whistle-blowing' : 'mascot-whistle'}>
+                <path d="M91 138 L105 136 L109 143 L95 148 Z" fill="url(#whistleMetal)" stroke="#555E6B" strokeWidth="1.8" strokeLinejoin="round" />
+                <rect x="92" y="139" width="4" height="8" rx="1" fill="#20242B" transform="rotate(-12 94 143)" />
+                <circle cx="110" cy="143" r="7" fill="url(#whistleMetal)" stroke="#555E6B" strokeWidth="1.8" />
+                <circle cx="110" cy="143" r="3.5" fill="#D8DEE7" stroke="#7E8794" strokeWidth="1" />
+                <path d="M104 136 Q111 132 117 137" fill="none" stroke="#F7F9FC" strokeWidth="2" strokeLinecap="round" />
+                <circle cx="116" cy="134" r="2.5" fill="none" stroke="#727C89" strokeWidth="1.5" />
+              </g>
               {blowing && (
                 <g className="whistle-note">
-                  <path d="M110 140 Q118 138 120 132" fill="none" stroke="#E23F8E" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M110 146 Q120 145 123 138" fill="none" stroke="#EC5FA3" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M118 137 Q126 134 128 127" fill="none" stroke="#E23F8E" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M120 144 Q130 142 132 135" fill="none" stroke="#EC5FA3" strokeWidth="2" strokeLinecap="round" />
                 </g>
               )}
 

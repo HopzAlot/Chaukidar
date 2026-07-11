@@ -111,8 +111,8 @@ body {
    Mascot animations
 --------------------------------------------------------------------- */
 @keyframes mascot-sway {
-  0%, 100% { transform: rotate(-4deg); }
-  50% { transform: rotate(4deg); }
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-3px) rotate(1deg); }
 }
 @keyframes mascot-wave {
   0%, 100% { transform: rotate(18deg); }
@@ -127,6 +127,15 @@ body {
   35% { opacity: 1; transform: scale(1.1) translateY(-2px); }
   100% { opacity: 0; transform: scale(0.8) translateY(-8px); }
 }
+@keyframes mascot-salute {
+  0% { transform: rotate(10deg) translateY(3px); }
+  55% { transform: rotate(-3deg) translateY(0); }
+  100% { transform: rotate(0) translateY(0); }
+}
+@keyframes mascot-whistle-blow {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  45% { transform: translate(-7px, -12px) rotate(-12deg); }
+}
 
 .mascot-sway {
   animation: mascot-sway 3.6s ease-in-out infinite;
@@ -134,6 +143,18 @@ body {
 .mascot-wave {
   transform-box: fill-box;
   animation: mascot-wave 2.4s ease-in-out infinite;
+}
+.mascot-salute {
+  transform-box: fill-box;
+  transform-origin: 100px 146px;
+  animation: mascot-salute 280ms ease-out both;
+}
+.mascot-whistle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.mascot-whistle-blowing {
+  animation: mascot-whistle-blow 0.55s ease-in-out;
 }
 .mascot-shoe {
   transform-box: fill-box;
@@ -162,6 +183,7 @@ body {
   font-family: var(--font-poppins), sans-serif;
   font-weight: 600;
   font-size: 13px;
+  letter-spacing: 0;
   white-space: nowrap;
   padding: 8px 14px;
   border-radius: 14px;

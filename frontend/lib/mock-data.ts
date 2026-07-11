@@ -15,9 +15,9 @@ import type {
 
 export const MOCK_TARGET: TargetModel = {
   id: 1,
-  name: 'Llama-3.1-8B-Instruct (vLLM / MI300X)',
-  endpoint_type: 'vllm',
-  endpoint_url: 'http://localhost:8001/v1',
+  name: 'accounts/fireworks/models/kimi-k2p7-code',
+  endpoint_type: 'fireworks',
+  endpoint_url: 'https://api.fireworks.ai/inference/v1',
   api_key_ref: null,
   is_rag: false,
   created_at: new Date().toISOString(),
@@ -26,7 +26,7 @@ export const MOCK_TARGET: TargetModel = {
 export const MOCK_AUDIT_RUN: AuditRun = {
   id: 1001,
   target_model_id: 1,
-  name: 'Sample audit — Llama-3.1-8B baseline',
+  name: 'Sample Fireworks audit',
   languages: ['ur', 'punjabi', 'ps', 'sd'],
   harm_categories: HARM_CATEGORIES.map((c) => c.key),
   include_translation_track: true,

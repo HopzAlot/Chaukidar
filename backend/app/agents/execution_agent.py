@@ -16,14 +16,6 @@ async def execute_prompt(prompt: Prompt, target: TargetModel):
             api_key=settings.fireworks_api_key,
         )
 
-    if target.endpoint_type in {"vllm", "openai_compatible", "rag"}:
-        return await openai_compatible.complete(
-            base_url=target.endpoint_url,
-            model=target.name,
-            prompt_text=prompt.prompt_text,
-            api_key=settings.vllm_api_key,
-        )
-
     if target.endpoint_type == "amd_notebook":
         raise ValueError("AMD notebook imports are view-only; run them from the hosted notebook.")
 

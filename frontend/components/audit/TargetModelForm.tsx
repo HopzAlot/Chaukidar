@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { listTargetModels } from '@/lib/api';
-import type { EndpointType, TargetModel, TargetModelCreate } from '@/lib/types';
+import type { TargetModel, TargetModelCreate } from '@/lib/types';
+
+const FIREWORKS_ENDPOINT = 'https://api.fireworks.ai/inference/v1';
 
 export default function TargetModelForm({
   value,
@@ -16,11 +18,7 @@ export default function TargetModelForm({
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState('');
-  const [endpointType, setEndpointType] = useState<EndpointType>('vllm');
-  const [endpointUrl, setEndpointUrl] = useState('');
-  const executableModels = models.filter((model) =>
-    ['fireworks', 'vllm', 'openai_compatible', 'rag'].includes(model.endpoint_type)
-  );
+  const executableModels = models.filter((model) => model.endpoint_type === 'fireworks');
 
   useEffect(() => {
     listTargetModels()
@@ -30,10 +28,14 @@ export default function TargetModelForm({
 
   useEffect(() => {
     if (mode === 'new') {
-      onChange({ name, endpoint_type: endpointType, endpoint_url: endpointUrl });
+      onChange({
+        name,
+        endpoint_type: 'fireworks',
+        endpoint_url: FIREWORKS_ENDPOINT,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, name, endpointType, endpointUrl]);
+  }, [mode, name]);
 
   return (
     <div className="space-y-4">
@@ -63,53 +65,35 @@ export default function TargetModelForm({
           {loading ? (
             <p className="text-sm text-ink-faint">Loading registered models…</p>
           ) : (
-            <select
-              className="w-full rounded-md border border-line bg-paper-raised px-3 py-2.5 text-sm"
-              onChange={(e) => onChange({ existingId: Number(e.target.value) })}
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Select a target model
-              </option>
-              {executableModels.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({m.endpoint_type})
+            executableModels.length === 0 ? (
+              <p className="text-sm text-ink-faint">No Fireworks models registered.</p>
+            ) : (
+              <select
+                className="w-full rounded-md border border-line bg-paper-raised px-3 py-2.5 text-sm"
+                onChange={(e) => onChange({ existingId: Number(e.target.value) })}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Select a Fireworks model
                 </option>
-              ))}
-            </select>
+                {executableModels.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            )
           )}
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm sm:col-span-2">
-            <span className="mb-1.5 block text-ink-soft">Model name</span>
+        <div>
+          <label className="block text-sm">
+            <span className="mb-1.5 block text-ink-soft">Fireworks model ID</span>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Llama-3.1-8B-Instruct"
+              placeholder="accounts/fireworks/models/..."
               className="w-full rounded-md border border-line bg-paper-raised px-3 py-2.5"
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1.5 block text-ink-soft">Endpoint type</span>
-            <select
-              value={endpointType}
-              onChange={(e) => setEndpointType(e.target.value as EndpointType)}
-              className="w-full rounded-md border border-line bg-paper-raised px-3 py-2.5"
-            >
-              <option value="vllm">vLLM (ROCm)</option>
-              <option value="openai_compatible">OpenAI-compatible</option>
-              <option value="fireworks">Fireworks</option>
-              <option value="rag">RAG endpoint</option>
-            </select>
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1.5 block text-ink-soft">Endpoint URL</span>
-            <input
-              value={endpointUrl}
-              onChange={(e) => setEndpointUrl(e.target.value)}
-              placeholder="http://localhost:8001/v1"
-              className="w-full rounded-md border border-line bg-paper-raised px-3 py-2.5 font-mono text-xs"
             />
           </label>
         </div>

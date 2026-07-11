@@ -99,6 +99,13 @@ export async function createAuditRun(payload: AuditRunCreate): Promise<AuditRun>
   });
 }
 
+export async function importAmdAudit(payload: unknown): Promise<AuditRun> {
+  return request<AuditRun>('/api/audits/import', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function startAuditRun(auditId: number): Promise<{ status: string }> {
   if (USE_MOCK) return delay({ status: 'started' });
   return request<{ status: string }>(`/api/audits/${auditId}/run`, {

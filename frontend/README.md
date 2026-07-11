@@ -71,7 +71,7 @@ frontend/
   a slow, light-toned `waterPlane` gradient behind the landing hero only,
   faded into the paper background at the edges. It's loaded via
   `next/dynamic` with `ssr: false` since it needs a WebGL canvas. Tune it
-  by editing the props on `<ShaderGradient />`; `uSpeed`/`uStrength` control
+  by editing `GradientBackground.tsx`; the CSS layers control
   how lively it feels, `color1/2/3` control the palette.
 - **Mascot** (`components/shared/Mascot.tsx`) hangs from the navbar logo:
   idle sway + arm wave via CSS keyframes in `globals.css`, pupils track the

@@ -5,9 +5,11 @@ from sqlalchemy.orm import Session
 
 from app.agents.audit_runner import run_audit
 from app.database import SessionLocal, get_db
+from app.importer import import_audit_payload
 from app.models.audit import AuditResult, AuditRun
 from app.models.prompt import HarmCategory, Prompt
 from app.schemas.audit import AuditResultRead, AuditRunCreate, AuditRunRead
+from app.schemas.imported_audit import ImportedAuditPayload
 
 router = APIRouter(prefix="/api/audits", tags=["audits"])
 
@@ -79,6 +81,16 @@ def create_audit(payload: AuditRunCreate, db: Session = Depends(get_db)):
 def list_audits(db: Session = Depends(get_db)):
     audits = db.query(AuditRun).order_by(AuditRun.created_at.desc()).all()
     return [serialize_audit(audit) for audit in audits]
+
+
+@router.post("/import", response_model=AuditRunRead)
+def import_amd_audit(payload: ImportedAuditPayload, db: Session = Depends(get_db)):
+    try:
+        audit = import_audit_payload(db, payload, provider_override="amd_notebook")
+    except Exception:
+        db.rollback()
+        raise
+    return serialize_audit(audit)
 
 
 @router.post("/{audit_id}/run")

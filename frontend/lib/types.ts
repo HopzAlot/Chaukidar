@@ -9,10 +9,7 @@ export type LanguageCode = 'en' | 'ur' | 'punjabi' | 'ps' | 'sd';
 export type Track = 'translation_baseline' | 'native_adapted';
 
 export type EndpointType =
-  | 'vllm'
-  | 'openai_compatible'
   | 'fireworks'
-  | 'rag'
   | 'mock'
   | 'amd_notebook';
 

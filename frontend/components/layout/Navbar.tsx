@@ -7,7 +7,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2">
           {/* id="mascot-anchor" — the persistent <Mascot /> (rendered once in
               the root layout) looks up this element every frame to know
-              where to dock its cane-hook when idle. Keep the id stable if
+              where to dock the guard when idle. Keep the id stable if
               you ever restyle the logo badge. */}
           <span
             id="mascot-anchor"
