@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Surface */
+  --color-paper: #FAFAF7;
+  --color-paper-raised: #FFFFFF;
+
+  /* Ink */
+  --color-ink: #14151B;
+  --color-ink-soft: #565A63;
+  --color-ink-faint: #9A9DA5;
+
+  --color-line: #E4E3DE;
+
+  /* Brand — deep audit-ledger indigo, not a consumer/marketing blue */
+  --color-brand: #232A5C;
+  --color-brand-soft: #4A519A;
+  --color-brand-tint: #ECEDF6;
+
+  /* Risk scale — deliberately desaturated, ledger/signal colors rather than neon */
+  --color-risk-safe: #2E7D5B;
+  --color-risk-safe-tint: #E7F2EC;
+  --color-risk-review: #B4791E;
+  --color-risk-review-tint: #FBF0DF;
+  --color-risk-high: #A3372F;
+  --color-risk-high-tint: #F8E9E7;
+
+  /* Decorative accents — used only for marketing-page variety, never for risk data */
+  --color-accent-teal: #1F7D74;
+  --color-accent-teal-tint: #E4F1EF;
+  --color-accent-plum: #6B4FA0;
+  --color-accent-plum-tint: #EFEAF7;
+  --color-accent-pink: #E23F8E;
+  --color-accent-pink-tint: #FCE7F2;
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus ring — visible, consistent, not the default blue outline */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* Hairline grid backdrop used behind the hero / section dividers */
+.ledger-grid {
+  background-image:
+    linear-gradient(to right, var(--color-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-line) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.bg-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+/* Multi-axis drift for the hero shader gradient — not just a rightward pan */
+@keyframes gradient-drift {
+  0% { transform: translate(0%, 0%) scale(1.06); }
+  25% { transform: translate(-2%, 2.5%) scale(1.1); }
+  50% { transform: translate(2.5%, -1.5%) scale(1.05); }
+  75% { transform: translate(-1.5%, -2.5%) scale(1.1); }
+  100% { transform: translate(0%, 0%) scale(1.06); }
+}
+.gradient-drift {
+  animation: gradient-drift 24s ease-in-out infinite;
+}
+
+/* Keeps dark text readable when it sits directly over the animated gradient */
+.text-legible {
+  text-shadow: 0 1px 16px rgba(250, 250, 247, 0.85), 0 1px 3px rgba(250, 250, 247, 0.9);
+}
+
+/* Subtle dot texture for otherwise-flat sections */
+.dot-pattern {
+  background-image: radial-gradient(var(--color-ink) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ---------------------------------------------------------------------
+   Mascot animations
+--------------------------------------------------------------------- */
+@keyframes mascot-sway {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+@keyframes mascot-wave {
+  0%, 100% { transform: rotate(18deg); }
+  50% { transform: rotate(30deg); }
+}
+@keyframes mascot-shoe-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-5px) rotate(3deg); }
+}
+@keyframes whistle-note-pop {
+  0% { opacity: 0; transform: scale(0.5) translateY(0); }
+  35% { opacity: 1; transform: scale(1.1) translateY(-2px); }
+  100% { opacity: 0; transform: scale(0.8) translateY(-8px); }
+}
+
+.mascot-sway {
+  animation: mascot-sway 3.6s ease-in-out infinite;
+}
+.mascot-wave {
+  transform-box: fill-box;
+  animation: mascot-wave 2.4s ease-in-out infinite;
+}
+.mascot-shoe {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascot-shoe-float 2.8s ease-in-out infinite;
+}
+.whistle-note {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: whistle-note-pop 0.55s ease-out;
+}
+
+/* Speech bubble — plain HTML/CSS, sits beside the guard (he docks in the
+   top-left corner, so anchoring above him used to clip off-screen). */
+.speech-bubble {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  margin-left: 14px;
+  transform: translate(-6px, -50%) scale(0.85);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 180ms ease-out, opacity 180ms ease-out;
+  background: var(--color-paper-raised);
+  color: var(--color-ink);
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  padding: 8px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--color-brand);
+  box-shadow: 0 10px 26px -10px rgba(35, 42, 92, 0.4);
+}
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border: 7px solid transparent;
+  border-right-color: var(--color-brand);
+}
+.speech-bubble::before {
+  content: '';
+  position: absolute;
+  right: calc(100% - 2.5px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border: 5.5px solid transparent;
+  border-right-color: var(--color-paper-raised);
+  z-index: 1;
+}
+.speech-bubble-visible {
+  opacity: 1;
+  transform: translate(0, -50%) scale(1);
+}
+
+/* ---------------------------------------------------------------------
+   Print — used by the report page's "Download PDF" (browser print-to-PDF)
+--------------------------------------------------------------------- */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+  }
+  .print-area {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}

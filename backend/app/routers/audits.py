@@ -41,6 +41,7 @@ def serialize_result(result: AuditResult, prompt: Prompt | None, category: HarmC
         "language": prompt.language if prompt else None,
         "track": prompt.track if prompt else None,
         "intent_summary": prompt.intent_summary if prompt else None,
+        "raw_response_text": result.raw_response_text,
         "label": result.label,
         "confidence": result.confidence,
         "judge_explanation": result.judge_explanation,
@@ -74,11 +75,19 @@ def create_audit(payload: AuditRunCreate, db: Session = Depends(get_db)):
     return serialize_audit(audit)
 
 
+@router.get("", response_model=list[AuditRunRead])
+def list_audits(db: Session = Depends(get_db)):
+    audits = db.query(AuditRun).order_by(AuditRun.created_at.desc()).all()
+    return [serialize_audit(audit) for audit in audits]
+
+
 @router.post("/{audit_id}/run")
 def start_audit(audit_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     audit = db.get(AuditRun, audit_id)
     if audit is None:
         raise HTTPException(status_code=404, detail="Audit not found")
+    if audit.status != "pending":
+        raise HTTPException(status_code=409, detail=f"Audit is already {audit.status}")
     background_tasks.add_task(run_audit_task, audit_id)
     return {"status": "started", "audit_id": audit_id}
 
@@ -92,13 +101,21 @@ def get_audit(audit_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{audit_id}/results", response_model=list[AuditResultRead])
-def get_results(audit_id: int, db: Session = Depends(get_db)):
-    rows = (
+def get_results(
+    audit_id: int,
+    language: str | None = None,
+    category: str | None = None,
+    db: Session = Depends(get_db),
+):
+    query = (
         db.query(AuditResult, Prompt, HarmCategory)
         .join(Prompt, AuditResult.prompt_id == Prompt.id)
         .join(HarmCategory, Prompt.harm_category_id == HarmCategory.id)
         .filter(AuditResult.audit_run_id == audit_id)
-        .order_by(AuditResult.id)
-        .all()
     )
+    if language:
+        query = query.filter(Prompt.language == language)
+    if category:
+        query = query.filter(HarmCategory.key == category)
+    rows = query.order_by(AuditResult.id).all()
     return [serialize_result(result, prompt, category) for result, prompt, category in rows]

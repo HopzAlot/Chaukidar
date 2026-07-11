@@ -35,6 +35,7 @@ class AuditResultRead(BaseModel):
     language: str | None = None
     track: str | None = None
     intent_summary: str | None = None
+    raw_response_text: str | None = None
     label: str
     confidence: float
     judge_explanation: str
