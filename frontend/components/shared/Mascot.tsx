@@ -22,11 +22,21 @@ function getSafeDockPosition() {
   const top = 76;
   const bottom = Math.max(top, window.innerHeight - DISPLAY_H - margin);
   const right = Math.max(margin, window.innerWidth - DISPLAY_W - margin);
+  const brandMark = document.getElementById('app-brand-mark')?.getBoundingClientRect();
+  const brandDock = brandMark
+    ? {
+        x: Math.max(margin, Math.round(brandMark.left - 18)),
+        y: Math.min(bottom, Math.max(top - 4, Math.round(brandMark.bottom + 8))),
+        side: 'left' as const,
+        preferred: true,
+      }
+    : null;
   const candidates = [
-    { x: margin, y: top, side: 'left' as const },
-    { x: right, y: top, side: 'right' as const },
-    { x: margin, y: bottom, side: 'left' as const },
-    { x: right, y: bottom, side: 'right' as const },
+    ...(brandDock ? [brandDock] : []),
+    { x: margin, y: top, side: 'left' as const, preferred: false },
+    { x: right, y: top, side: 'right' as const, preferred: false },
+    { x: margin, y: bottom, side: 'left' as const, preferred: false },
+    { x: right, y: bottom, side: 'right' as const, preferred: false },
   ];
   const blockers = Array.from(
     document.querySelectorAll<HTMLElement>(
@@ -50,7 +60,7 @@ function getSafeDockPosition() {
       const overlapWidth = Math.max(0, Math.min(rightEdge, rect.right) - Math.max(left, rect.left));
       const overlapHeight = Math.max(0, Math.min(bottomEdge, rect.bottom) - Math.max(topEdge, rect.top));
       return total + overlapWidth * overlapHeight;
-    }, 0);
+    }, candidate.preferred ? 0 : 2800);
   }
 
   return candidates.reduce((best, candidate) => score(candidate) < score(best) ? candidate : best);
@@ -63,7 +73,7 @@ export default function Mascot() {
 
   const posRef = useRef({ x: -200, y: -200 });
   const initializedRef = useRef(false);
-  const safeDockRef = useRef({ x: 14, y: 76, side: 'left' as 'left' | 'right' });
+  const safeDockRef = useRef({ x: 14, y: 76, side: 'left' as 'left' | 'right', preferred: false });
   const lastDockCheckRef = useRef(0);
   const mouseRef = useRef({ x: -9999, y: -9999 });
   const jumpStartRef = useRef<number | null>(null);

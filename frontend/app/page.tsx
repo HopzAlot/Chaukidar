@@ -3,7 +3,6 @@ import { ArrowRight, Cpu, FileBarChart2, Languages, ListChecks, Scale, ShieldChe
 import Navbar from '@/components/layout/Navbar';
 import CoverageGrid from '@/components/shared/CoverageGrid';
 import GradientBackgroundLoader from '@/components/shared/GradientBackgroundLoader';
-import { LANGUAGES } from '@/lib/constants';
 
 const PIPELINE = [
   {
@@ -81,8 +80,6 @@ const ACCENT_CLASSES = {
 };
 
 const FEATURE_TILT = ['-rotate-[0.6deg]', 'rotate-0', 'rotate-[0.6deg]'];
-const LANGUAGE_ACCENTS = ['brand', 'teal', 'pink', 'plum'] as const;
-
 export default function LandingPage() {
   return (
     <>
@@ -210,44 +207,6 @@ export default function LandingPage() {
                         <ArrowRight size={16} />
                       </div>
                     )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* Languages */}
-        <section id="coverage" className="relative overflow-hidden">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 20% 80%, var(--color-accent-teal-tint) 0%, transparent 42%), radial-gradient(circle at 80% 20%, var(--color-accent-pink-tint) 0%, transparent 40%)',
-            }}
-          />
-          <div className="dot-pattern absolute inset-0 opacity-[0.06]" />
-          <div
-            className="bg-blob left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 animate-float bg-accent-plum/5"
-            style={{ animationDelay: '1.5s' }}
-          />
-          <div className="relative mx-auto max-w-shell px-6 py-16">
-            <h2 className="mb-8 font-display text-xl font-bold text-ink">
-              Languages covered
-            </h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {LANGUAGES.map((lang, i) => {
-                const cls = ACCENT_CLASSES[LANGUAGE_ACCENTS[i % LANGUAGE_ACCENTS.length]];
-                return (
-                  <div
-                    key={lang.code}
-                    className={`group rounded-lg border border-line bg-paper-raised/95 p-6 text-center shadow-[0_6px_20px_-16px_rgba(20,21,27,0.25)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_-20px_rgba(20,21,27,0.25)] ${cls.ring}`}
-                  >
-                    <div className="font-display text-3xl text-ink" dir="rtl">
-                      {lang.nativeLabel}
-                    </div>
-                    <div className="mt-2 text-xs text-ink-soft">{lang.label}</div>
-                    <div className={`mx-auto mt-3 h-[3px] w-8 rounded-full ${cls.bar} opacity-80 transition group-hover:w-12`} />
                   </div>
                 );
               })}
