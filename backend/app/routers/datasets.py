@@ -9,7 +9,7 @@ from app.schemas.dataset import CustomDatasetImportResult, CustomDatasetPayload
 
 router = APIRouter(prefix="/api/datasets", tags=["datasets"])
 
-ALLOWED_TRACKS = {"translation_baseline", "native_adapted"}
+ALLOWED_TRACKS = {"english_seed", "translation_baseline", "native_adapted"}
 ALLOWED_RISK_HINTS = {"low", "medium", "high"}
 
 

@@ -12,6 +12,8 @@ from app.utils.sanitizer import validate_sanitized_prompt
 
 
 DATA_DIR = BACKEND_ROOT / "app" / "data"
+SEED_DATA_DIR = BACKEND_ROOT / "app" / "seed_data"
+DEMO_DATASET = SEED_DATA_DIR / "demo_dataset.json"
 
 CATEGORIES = {
     "cyber_abuse": "Cyber Abuse",
@@ -23,12 +25,32 @@ CATEGORIES = {
 
 
 def load_prompt_files() -> list[dict]:
-    files = [DATA_DIR / "seed_prompts_en.json"]
-    files.extend((DATA_DIR / "translated").glob("*.json"))
-    files.extend((DATA_DIR / "native_adapted").glob("*.json"))
+    files: list[Path] = []
+    if DATA_DIR.exists():
+        seed_prompts = DATA_DIR / "seed_prompts_en.json"
+        if seed_prompts.exists():
+            files.append(seed_prompts)
+        for folder in (DATA_DIR / "translated", DATA_DIR / "native_adapted"):
+            if folder.exists():
+                files.extend(sorted(folder.glob("*.json")))
+
+    if not files:
+        if not DEMO_DATASET.exists():
+            raise FileNotFoundError(
+                f"No private data folder found and demo dataset is missing: {DEMO_DATASET}"
+            )
+        files = [DEMO_DATASET]
+        print(f"Private data folder not found; loading demo dataset from {DEMO_DATASET}.")
+
     records: list[dict] = []
+    seen: set[tuple[str, str, str]] = set()
     for path in files:
-        records.extend(json.loads(path.read_text(encoding="utf-8")))
+        for record in json.loads(path.read_text(encoding="utf-8")):
+            key = (record["seed_id"], record["language"], record["track"])
+            if key in seen:
+                continue
+            seen.add(key)
+            records.append(record)
     return records
 
 
