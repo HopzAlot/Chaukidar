@@ -1,6 +1,8 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 
+from app.config import settings
 from app.database import Base, SessionLocal, engine
 from app.models.prompt import Prompt
 from app.routers import audits, datasets, reports, targets
@@ -39,6 +41,15 @@ app = FastAPI(
     title="Chaukidar API",
     description="Multilingual AI safety audit backend for South Asian languages.",
     version="0.1.0",
+)
+
+allowed_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(targets.router)

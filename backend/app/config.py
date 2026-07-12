@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     judge_mode: str = "llm"
     judge_model: str = "accounts/fireworks/models/gpt-oss-120b"
     judge_timeout_seconds: int = 45
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     model_config = SettingsConfigDict(
         env_file=(str(REPO_ROOT / ".env"), str(BACKEND_DIR / ".env")),
