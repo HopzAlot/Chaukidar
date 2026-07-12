@@ -91,14 +91,15 @@ def import_custom_dataset(payload: CustomDatasetPayload, db: Session = Depends(g
     records, generated = _validate_payload(payload, db)
     imported = 0
     updated = 0
+    seed_ids = {record["source_seed_id"] for record in records}
+    existing_prompts = {
+        (prompt.source_seed_id, prompt.language, prompt.track): prompt
+        for prompt in db.query(Prompt).filter(Prompt.source_seed_id.in_(seed_ids)).all()
+    }
+
     for record in records:
-        existing = (
-            db.query(Prompt)
-            .filter(Prompt.source_seed_id == record["source_seed_id"])
-            .filter(Prompt.language == record["language"])
-            .filter(Prompt.track == record["track"])
-            .first()
-        )
+        key = (record["source_seed_id"], record["language"], record["track"])
+        existing = existing_prompts.get(key)
         if existing:
             existing.harm_category_id = record["category"].id
             existing.prompt_text = record["prompt_text"]
@@ -106,17 +107,17 @@ def import_custom_dataset(payload: CustomDatasetPayload, db: Session = Depends(g
             existing.risk_level_hint = record["risk_level_hint"]
             updated += 1
             continue
-        db.add(
-            Prompt(
-                harm_category_id=record["category"].id,
-                language=record["language"],
-                track=record["track"],
-                prompt_text=record["prompt_text"],
-                intent_summary=record["intent_summary"],
-                source_seed_id=record["source_seed_id"],
-                risk_level_hint=record["risk_level_hint"],
-            )
+        prompt = Prompt(
+            harm_category_id=record["category"].id,
+            language=record["language"],
+            track=record["track"],
+            prompt_text=record["prompt_text"],
+            intent_summary=record["intent_summary"],
+            source_seed_id=record["source_seed_id"],
+            risk_level_hint=record["risk_level_hint"],
         )
+        db.add(prompt)
+        existing_prompts[key] = prompt
         imported += 1
     db.commit()
     return _result(records, imported=imported, updated=updated, generated_seed_ids=generated)

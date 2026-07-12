@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Activity, BarChart3, FileText, RotateCcw } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -8,6 +8,7 @@ import Navbar from '@/components/layout/Navbar';
 import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { listAuditRuns, startAuditRun } from '@/lib/api';
+import { useAsyncResource } from '@/hooks/useAsyncResource';
 import { displayModelName } from '@/lib/model-label';
 import type { AuditRun } from '@/lib/types';
 
@@ -25,15 +26,12 @@ function modelLabel(audit: AuditRun) {
 export default function AuditGroupPage() {
   const params = useParams<{ groupName: string }>();
   const groupName = decodeURIComponent(params.groupName);
-  const [audits, setAudits] = useState<AuditRun[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { data: loadedAudits, error: loadError, loading } = useAsyncResource(listAuditRuns, []);
+  const [auditsOverride, setAuditsOverride] = useState<AuditRun[] | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [retryingIds, setRetryingIds] = useState<number[]>([]);
-
-  useEffect(() => {
-    listAuditRuns()
-      .then(setAudits)
-      .catch((reason) => setError(reason instanceof Error ? reason.message : 'Unable to load audit group.'));
-  }, []);
+  const audits = auditsOverride ?? loadedAudits;
+  const error = actionError ?? loadError;
 
   const runs = useMemo(
     () => (audits ?? [])
@@ -44,15 +42,15 @@ export default function AuditGroupPage() {
 
   async function handleRetry(auditId: number) {
     setRetryingIds((ids) => [...ids, auditId]);
-    setError(null);
+    setActionError(null);
     try {
       await startAuditRun(auditId);
-      setAudits((current) => current?.map((audit) => audit.id === auditId
+      setAuditsOverride((current) => (current ?? audits)?.map((audit) => audit.id === auditId
         ? { ...audit, status: 'running', progress_current: 0, progress_total: 0 }
         : audit
       ) ?? current);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Unable to retry audit run.');
+      setActionError(reason instanceof Error ? reason.message : 'Unable to retry audit run.');
     } finally {
       setRetryingIds((ids) => ids.filter((id) => id !== auditId));
     }
@@ -74,7 +72,7 @@ export default function AuditGroupPage() {
         </div>
 
         {error && <p className="rounded-md border border-risk-high bg-risk-high-tint p-4 text-sm text-risk-high">{error}</p>}
-        {!error && audits === null && <LoadingSpinner label="Loading model runs" />}
+        {!error && loading && <LoadingSpinner label="Loading model runs" />}
         {audits !== null && runs.length === 0 && (
           <p className="rounded-md border border-line bg-paper-raised p-4 text-sm text-ink-soft">
             No model runs found for this group.

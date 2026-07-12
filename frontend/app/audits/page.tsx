@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Folder, Plus } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { listAuditRuns } from '@/lib/api';
+import { useAsyncResource } from '@/hooks/useAsyncResource';
 import { displayModelName } from '@/lib/model-label';
 import type { AuditRun } from '@/lib/types';
 
@@ -25,14 +26,7 @@ function groupStatus(audits: AuditRun[]): AuditRun['status'] {
 }
 
 export default function AuditsPage() {
-  const [audits, setAudits] = useState<AuditRun[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    listAuditRuns()
-      .then(setAudits)
-      .catch((reason) => setError(reason instanceof Error ? reason.message : 'Unable to load audits.'));
-  }, []);
+  const { data: audits, error, loading } = useAsyncResource(listAuditRuns, []);
 
   const groups = useMemo(() => {
     if (!audits) return [];
@@ -63,7 +57,7 @@ export default function AuditsPage() {
         </div>
 
         {error && <p className="rounded-md border border-risk-high bg-risk-high-tint p-4 text-sm text-risk-high">{error}</p>}
-        {!error && audits === null && <LoadingSpinner label="Loading audit groups" />}
+        {!error && loading && <LoadingSpinner label="Loading audit groups" />}
         {groups.length === 0 && audits !== null && <p className="text-sm text-ink-soft">No audits yet.</p>}
 
         <div className="space-y-3">

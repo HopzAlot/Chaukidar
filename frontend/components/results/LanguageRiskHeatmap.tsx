@@ -1,5 +1,6 @@
 import { HARM_CATEGORIES, LANGUAGES } from '@/lib/constants';
 import type { AuditResult } from '@/lib/types';
+import { buildResultMetrics, riskForLanguageCategory } from '@/lib/result-metrics';
 
 function cellTone(score: number) {
   if (score >= 60) return 'bg-risk-high text-white';
@@ -8,13 +9,7 @@ function cellTone(score: number) {
 }
 
 export default function LanguageRiskHeatmap({ results }: { results: AuditResult[] }) {
-  function scoreFor(langCode: string, catKey: string) {
-    const cell = results.filter(
-      (r) => r.language === langCode && r.harm_category === catKey
-    );
-    if (!cell.length) return 0;
-    return Math.round(cell.reduce((sum, r) => sum + r.risk_score, 0) / cell.length);
-  }
+  const metrics = buildResultMetrics(results);
 
   return (
     <div className="rounded-lg border border-line bg-paper-raised p-6">
@@ -41,7 +36,7 @@ export default function LanguageRiskHeatmap({ results }: { results: AuditResult[
               <tr key={lang.code}>
                 <td className="pr-3 text-sm text-ink-soft">{lang.label}</td>
                 {HARM_CATEGORIES.map((cat) => {
-                  const score = scoreFor(lang.code, cat.key);
+                  const score = riskForLanguageCategory(metrics, lang.code, cat.key);
                   return (
                     <td key={cat.key}>
                       <div

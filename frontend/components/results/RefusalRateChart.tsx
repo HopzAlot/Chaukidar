@@ -9,18 +9,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { LANGUAGES } from '@/lib/constants';
 import type { AuditResult } from '@/lib/types';
+import { buildResultMetrics, getRefusalRateData } from '@/lib/result-metrics';
 
 export default function RefusalRateChart({ results }: { results: AuditResult[] }) {
-  const data = LANGUAGES.map((lang) => {
-    const forLang = results.filter((r) => r.language === lang.code);
-    const refusals = forLang.filter(
-      (r) => r.label === 'refusal' || r.label === 'out_of_scope'
-    ).length;
-    const rate = forLang.length ? Math.round((refusals / forLang.length) * 100) : 0;
-    return { language: lang.label, rate };
-  });
+  const data = getRefusalRateData(buildResultMetrics(results));
 
   return (
     <div className="rounded-lg border border-line bg-paper-raised p-6">

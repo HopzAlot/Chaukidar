@@ -24,21 +24,40 @@ export default function AuditRunPage() {
   const [retryError, setRetryError] = useState<string | null>(null);
   const [pollVersion, setPollVersion] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const inFlightRef = useRef(false);
+  const lastProgressRef = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    lastProgressRef.current = null;
 
     async function poll() {
-      const [nextRun, results] = await Promise.all([
-        getAuditRun(auditId),
-        getAuditResults(auditId),
-      ]);
-      if (cancelled) return;
-      setRun(nextRun);
-      setRecent(results.slice(-3));
+      if (inFlightRef.current) return;
+      inFlightRef.current = true;
+      try {
+        const nextRun = await getAuditRun(auditId);
+        if (cancelled) return;
 
-      if (nextRun.status === 'completed' || nextRun.status === 'failed') {
-        if (timerRef.current) clearInterval(timerRef.current);
+        const progressChanged = nextRun.progress_current !== lastProgressRef.current;
+        const terminal = nextRun.status === 'completed' || nextRun.status === 'failed';
+        setRun(nextRun);
+
+        if (progressChanged || terminal) {
+          lastProgressRef.current = nextRun.progress_current;
+          const results = await getAuditResults(auditId);
+          if (!cancelled) setRecent(results.slice(-3));
+        }
+
+        if (terminal && timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      } catch (reason) {
+        if (!cancelled) {
+          setRetryError(reason instanceof Error ? reason.message : 'Unable to poll audit status.');
+        }
+      } finally {
+        inFlightRef.current = false;
       }
     }
 

@@ -1,30 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
 import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import { LANGUAGES, READINESS_TONE } from '@/lib/constants';
+import { READINESS_TONE } from '@/lib/constants';
 import { getAuditResults, getReport } from '@/lib/api';
+import { useAsyncResource } from '@/hooks/useAsyncResource';
 import type { AuditResult, Report } from '@/lib/types';
+import { buildResultMetrics, getLanguageReportRows } from '@/lib/result-metrics';
 
 export default function ReportPage() {
   const params = useParams<{ auditId: string }>();
   const auditId = Number(params.auditId);
 
-  const [report, setReport] = useState<Report | null>(null);
-  const [results, setResults] = useState<AuditResult[]>([]);
-
-  useEffect(() => {
-    Promise.all([getReport(auditId), getAuditResults(auditId)]).then(
-      ([rep, res]) => {
-        setReport(rep);
-        setResults(res);
-      }
-    );
-  }, [auditId]);
+  const { data, error } = useAsyncResource(
+    () => Promise.all([getReport(auditId), getAuditResults(auditId)]),
+    [auditId]
+  );
+  const report = data?.[0] ?? null;
+  const results = data?.[1] ?? [];
 
   function handleDownload() {
     window.print();
@@ -65,7 +61,9 @@ export default function ReportPage() {
               )}
             </div>
 
-            {!report ? (
+            {error ? (
+              <p className="rounded-md border border-risk-high bg-risk-high-tint p-4 text-sm text-risk-high">{error}</p>
+            ) : !report ? (
               <LoadingSpinner label="Generating report preview" />
             ) : (
               <ReportPreview report={report} results={results} />
@@ -78,22 +76,7 @@ export default function ReportPage() {
 }
 
 function ReportPreview({ report, results }: { report: Report; results: AuditResult[] }) {
-  const byLanguage = LANGUAGES.map((lang) => {
-    const rows = results.filter((r) => r.language === lang.code);
-    const avg = rows.length
-      ? Math.round(rows.reduce((s, r) => s + r.risk_score, 0) / rows.length)
-      : 0;
-    const translation = rows.filter((r) => r.track === 'translation_baseline');
-    const native = rows.filter((r) => r.track === 'native_adapted');
-    const avgOf = (arr: AuditResult[]) =>
-      arr.length ? Math.round(arr.reduce((s, r) => s + r.risk_score, 0) / arr.length) : 0;
-    return {
-      lang,
-      avg,
-      translationRisk: avgOf(translation),
-      nativeRisk: avgOf(native),
-    };
-  });
+  const byLanguage = getLanguageReportRows(buildResultMetrics(results));
 
   return (
     <article className="print-area rounded-lg border border-line bg-paper-raised p-8">

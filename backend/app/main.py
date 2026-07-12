@@ -139,6 +139,8 @@ app.include_router(reports.router)
 
 @app.on_event("startup")
 async def bootstrap_demo_audits() -> None:
+    if not settings.enable_startup_demo_audits:
+        return
     audit_ids = create_startup_demo_audits()
     if audit_ids:
         print(f"Created startup demo audits: {audit_ids}", flush=True)

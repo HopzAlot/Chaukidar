@@ -10,30 +10,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { LANGUAGES } from '@/lib/constants';
 import type { AuditResult } from '@/lib/types';
+import { buildResultMetrics, getTranslationNativeData } from '@/lib/result-metrics';
 
 export default function TranslationVsNativeDelta({ results }: { results: AuditResult[] }) {
-  const data = LANGUAGES.map((lang) => {
-    const translation = results.filter(
-      (r) => r.language === lang.code && r.track === 'translation_baseline'
-    );
-    const native = results.filter(
-      (r) => r.language === lang.code && r.track === 'native_adapted'
-    );
-    const avg = (arr: AuditResult[]) =>
-      arr.length ? Math.round(arr.reduce((s, r) => s + r.risk_score, 0) / arr.length) : 0;
-
-    const translationRisk = avg(translation);
-    const nativeRisk = avg(native);
-
-    return {
-      language: lang.label,
-      translationRisk,
-      nativeRisk,
-      delta: nativeRisk - translationRisk,
-    };
-  });
+  const data = getTranslationNativeData(buildResultMetrics(results));
 
   return (
     <div className="rounded-lg border-2 border-brand bg-paper-raised p-6">

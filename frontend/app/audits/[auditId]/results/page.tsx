@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
@@ -13,23 +12,19 @@ import CategoryRiskChart from '@/components/results/CategoryRiskChart';
 import TranslationVsNativeDelta from '@/components/results/TranslationVsNativeDelta';
 import ResultsTable from '@/components/results/ResultsTable';
 import { getAuditResults, getReport } from '@/lib/api';
+import { useAsyncResource } from '@/hooks/useAsyncResource';
 import type { AuditResult, Report } from '@/lib/types';
 
 export default function ResultsPage() {
   const params = useParams<{ auditId: string }>();
   const auditId = Number(params.auditId);
 
-  const [results, setResults] = useState<AuditResult[] | null>(null);
-  const [report, setReport] = useState<Report | null>(null);
-
-  useEffect(() => {
-    Promise.all([getAuditResults(auditId), getReport(auditId)]).then(
-      ([r, rep]) => {
-        setResults(r);
-        setReport(rep);
-      }
-    );
-  }, [auditId]);
+  const { data, error } = useAsyncResource(
+    () => Promise.all([getAuditResults(auditId), getReport(auditId)]),
+    [auditId]
+  );
+  const results = data?.[0] ?? null;
+  const report = data?.[1] ?? null;
 
   return (
     <>
@@ -56,7 +51,9 @@ export default function ResultsPage() {
               </Link>
             </div>
 
-            {!results || !report ? (
+            {error ? (
+              <p className="rounded-md border border-risk-high bg-risk-high-tint p-4 text-sm text-risk-high">{error}</p>
+            ) : !results || !report ? (
               <LoadingSpinner label="Loading results" />
             ) : (
               <div className="space-y-6">

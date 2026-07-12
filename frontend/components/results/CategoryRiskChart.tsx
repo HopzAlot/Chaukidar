@@ -9,17 +9,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { HARM_CATEGORIES } from '@/lib/constants';
 import type { AuditResult } from '@/lib/types';
+import { buildResultMetrics, getCategoryRiskData } from '@/lib/result-metrics';
 
 export default function CategoryRiskChart({ results }: { results: AuditResult[] }) {
-  const data = HARM_CATEGORIES.map((cat) => {
-    const forCat = results.filter((r) => r.harm_category === cat.key);
-    const avg = forCat.length
-      ? Math.round(forCat.reduce((sum, r) => sum + r.risk_score, 0) / forCat.length)
-      : 0;
-    return { category: cat.displayName, risk: avg };
-  });
+  const data = getCategoryRiskData(buildResultMetrics(results));
 
   return (
     <div className="rounded-lg border border-line bg-paper-raised p-6">

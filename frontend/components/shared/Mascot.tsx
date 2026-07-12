@@ -85,6 +85,8 @@ export default function Mascot() {
   const chaseStartedAtRef = useRef(0);
   const facingRef = useRef<1 | -1>(1);
   const rafRef = useRef<number | null>(null);
+  const pupilRafRef = useRef<number | null>(null);
+  const nextPupilRef = useRef({ x: 0, y: 0 });
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const blowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -99,7 +101,6 @@ export default function Mascot() {
   const [saluting, setSaluting] = useState(false);
   const [blowing, setBlowing] = useState(false);
   const [bubbleOnLeft, setBubbleOnLeft] = useState(false);
-  const [, setFacing] = useState<1 | -1>(1);
 
   // --- Mouse tracking: powers both eye-tracking and chase movement. --------
   useEffect(() => {
@@ -111,10 +112,19 @@ export default function Mascot() {
       const dy = e.clientY - cy;
       const dist = Math.hypot(dx, dy) || 1;
       const pull = Math.min(EYE_MOVE_RANGE, dist / 16);
-      setPupil({ x: (dx / dist) * pull, y: (dy / dist) * pull });
+      nextPupilRef.current = { x: (dx / dist) * pull, y: (dy / dist) * pull };
+      if (pupilRafRef.current === null) {
+        pupilRafRef.current = requestAnimationFrame(() => {
+          pupilRafRef.current = null;
+          setPupil(nextPupilRef.current);
+        });
+      }
     }
-    window.addEventListener('mousemove', handleMove);
-    return () => window.removeEventListener('mousemove', handleMove);
+    window.addEventListener('mousemove', handleMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      if (pupilRafRef.current !== null) cancelAnimationFrame(pupilRafRef.current);
+    };
   }, []);
 
   // A click anywhere after the initial mascot click ends the chase.
@@ -178,7 +188,6 @@ export default function Mascot() {
         const dockFacing = dock.side === 'right' ? -1 : 1;
         if (facingRef.current !== dockFacing) {
           facingRef.current = dockFacing;
-          setFacing(dockFacing);
         }
       } else if (m === 'chasing') {
         let target = {
@@ -201,7 +210,6 @@ export default function Mascot() {
           const nextFacing = dx < 0 ? -1 : 1;
           if (nextFacing !== facingRef.current) {
             facingRef.current = nextFacing;
-            setFacing(nextFacing);
           }
         }
       } else if (m === 'returning') {
@@ -213,7 +221,6 @@ export default function Mascot() {
           const nextFacing = dx < 0 ? -1 : 1;
           if (nextFacing !== facingRef.current) {
             facingRef.current = nextFacing;
-            setFacing(nextFacing);
           }
         }
         if (dist < 8) {

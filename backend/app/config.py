@@ -12,12 +12,15 @@ class Settings(BaseSettings):
     app_env: str = "development"
     api_key: str = "dev-chaukidar-key"
     use_mock_inference: bool = True
+    enable_startup_demo_audits: bool = False
     fireworks_api_key: str = ""
     fireworks_base_url: str = "https://api.fireworks.ai/inference/v1"
     fireworks_models: str = ""
     judge_mode: str = "llm"
     judge_model: str = "accounts/fireworks/models/gpt-oss-120b"
     judge_timeout_seconds: int = 45
+    audit_concurrency: int = 4
+    audit_progress_commit_interval: int = 5
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     model_config = SettingsConfigDict(
