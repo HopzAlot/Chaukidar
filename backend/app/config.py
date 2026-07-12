@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     fireworks_api_key: str = ""
     fireworks_base_url: str = "https://api.fireworks.ai/inference/v1"
     fireworks_models: str = ""
+    judge_mode: str = "llm"
+    judge_model: str = "accounts/fireworks/models/gpt-oss-120b"
+    judge_timeout_seconds: int = 45
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
