@@ -77,6 +77,7 @@ def import_audit_payload(
         name=run.name,
         languages=json.dumps(run.languages),
         harm_categories=json.dumps(run.harm_categories),
+        include_english_track="english_seed" in tracks,
         include_translation_track="translation_baseline" in tracks,
         include_native_track="native_adapted" in tracks,
         status="completed",

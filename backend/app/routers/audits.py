@@ -23,6 +23,7 @@ def serialize_audit(audit: AuditRun, target_name: str | None = None) -> dict:
         "name": audit.name,
         "languages": json.loads(audit.languages),
         "harm_categories": json.loads(audit.harm_categories),
+        "include_english_track": audit.include_english_track,
         "include_translation_track": audit.include_translation_track,
         "include_native_track": audit.include_native_track,
         "status": audit.status,
@@ -72,6 +73,7 @@ def create_audit(payload: AuditRunCreate, db: Session = Depends(get_db)):
         name=payload.name,
         languages=json.dumps(payload.languages),
         harm_categories=json.dumps(payload.harm_categories),
+        include_english_track=payload.include_english_track,
         include_translation_track=payload.include_translation_track,
         include_native_track=payload.include_native_track,
     )

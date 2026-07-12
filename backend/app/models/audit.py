@@ -13,6 +13,7 @@ class AuditRun(Base):
     name = Column(String(160), nullable=False)
     languages = Column(Text, nullable=False)
     harm_categories = Column(Text, nullable=False)
+    include_english_track = Column(Boolean, default=True)
     include_translation_track = Column(Boolean, default=True)
     include_native_track = Column(Boolean, default=True)
     status = Column(String(40), default="pending")

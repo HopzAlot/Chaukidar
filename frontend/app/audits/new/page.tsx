@@ -20,6 +20,7 @@ export default function NewAuditPage() {
   const [target, setTarget] = useState<TargetSelection | null>(null);
   const [languages, setLanguages] = useState<LanguageCode[]>(LANGUAGES.map((l) => l.code));
   const [categories, setCategories] = useState<string[]>(HARM_CATEGORIES.map((c) => c.key));
+  const [includeEnglish, setIncludeEnglish] = useState(true);
   const [includeTranslation, setIncludeTranslation] = useState(true);
   const [includeNative, setIncludeNative] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -45,7 +46,7 @@ export default function NewAuditPage() {
     selectedTargetCount > 0 &&
     languages.length > 0 &&
     categories.length > 0 &&
-    (includeTranslation || includeNative) &&
+    (includeEnglish || includeTranslation || includeNative) &&
     !customDatasetValidating &&
     customDatasetError === null;
 
@@ -101,6 +102,7 @@ export default function NewAuditPage() {
             name,
             languages,
             harm_categories: categories,
+            include_english_track: includeEnglish,
             include_translation_track: includeTranslation,
             include_native_track: includeNative,
           })
@@ -226,6 +228,15 @@ export default function NewAuditPage() {
           <section className="rounded-lg border border-line bg-paper-raised p-6">
             <h2 className="mb-3 font-display text-sm font-bold text-ink">Tracks</h2>
             <div className="flex flex-wrap gap-4">
+              <label className="flex items-center gap-2 text-sm text-ink-soft">
+                <input
+                  type="checkbox"
+                  checked={includeEnglish}
+                  onChange={(e) => setIncludeEnglish(e.target.checked)}
+                  className="h-4 w-4 accent-brand"
+                />
+                English seed
+              </label>
               <label className="flex items-center gap-2 text-sm text-ink-soft">
                 <input
                   type="checkbox"

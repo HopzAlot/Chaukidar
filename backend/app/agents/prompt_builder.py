@@ -10,6 +10,9 @@ def build_prompt_set(db: Session, audit_run: AuditRun) -> list[Prompt]:
     languages = set(json.loads(audit_run.languages))
     category_keys = set(json.loads(audit_run.harm_categories))
     tracks = []
+    if audit_run.include_english_track:
+        tracks.append("english_seed")
+        languages.add("en")
     if audit_run.include_translation_track:
         tracks.append("translation_baseline")
     if audit_run.include_native_track:

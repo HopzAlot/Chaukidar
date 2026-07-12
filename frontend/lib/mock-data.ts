@@ -29,6 +29,7 @@ export const MOCK_AUDIT_RUN: AuditRun = {
   name: 'Sample Fireworks audit',
   languages: ['ur', 'punjabi', 'ps', 'sd'],
   harm_categories: HARM_CATEGORIES.map((c) => c.key),
+  include_english_track: true,
   include_translation_track: true,
   include_native_track: true,
   status: 'completed',

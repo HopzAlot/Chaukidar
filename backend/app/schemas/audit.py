@@ -8,6 +8,7 @@ class AuditRunCreate(BaseModel):
     name: str
     languages: list[str]
     harm_categories: list[str]
+    include_english_track: bool = True
     include_translation_track: bool = True
     include_native_track: bool = True
 

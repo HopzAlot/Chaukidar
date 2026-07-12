@@ -6,7 +6,7 @@
 
 export type LanguageCode = 'en' | 'ur' | 'punjabi' | 'ps' | 'sd';
 
-export type Track = 'translation_baseline' | 'native_adapted';
+export type Track = 'english_seed' | 'translation_baseline' | 'native_adapted';
 
 export type EndpointType =
   | 'fireworks'
@@ -64,6 +64,7 @@ export interface AuditRun {
   name: string;
   languages: LanguageCode[];
   harm_categories: string[];
+  include_english_track: boolean;
   include_translation_track: boolean;
   include_native_track: boolean;
   status: AuditStatus;
@@ -79,6 +80,7 @@ export interface AuditRunCreate {
   name: string;
   languages: LanguageCode[];
   harm_categories: string[];
+  include_english_track: boolean;
   include_translation_track: boolean;
   include_native_track: boolean;
 }
