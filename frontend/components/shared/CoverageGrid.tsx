@@ -10,6 +10,11 @@ function toneFor(row: number, col: number) {
   return TONES[2];
 }
 
+const COVERED_LANGUAGES = [
+  { code: 'en', label: 'English' },
+  ...LANGUAGES,
+];
+
 export default function CoverageGrid() {
   return (
     <div className="relative rounded-lg border-2 border-white bg-paper-raised p-5 shadow-[0_24px_70px_-20px_rgba(226,63,142,0.35),0_10px_36px_-16px_rgba(35,42,92,0.3)]">
@@ -20,7 +25,7 @@ export default function CoverageGrid() {
         className="grid gap-1.5"
         style={{ gridTemplateColumns: `repeat(${HARM_CATEGORIES.length}, minmax(0, 1fr))` }}
       >
-        {LANGUAGES.map((lang, row) =>
+        {COVERED_LANGUAGES.map((lang, row) =>
           HARM_CATEGORIES.map((cat, col) => (
             <div
               key={`${lang.code}-${cat.key}`}
@@ -32,11 +37,11 @@ export default function CoverageGrid() {
         )}
       </div>
       <div className="mt-4 flex items-center justify-between text-[11px] text-ink-faint">
-        <span>4 languages</span>
+        <span>5 languages</span>
         <span>×</span>
         <span>5 harm categories</span>
         <span>×</span>
-        <span>2 tracks</span>
+        <span>3 tracks</span>
       </div>
     </div>
   );

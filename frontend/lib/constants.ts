@@ -27,6 +27,7 @@ export const HARM_CATEGORIES: { key: string; displayName: string }[] = [
 ];
 
 export const TRACK_LABELS: Record<string, string> = {
+  english_seed: 'English seed',
   translation_baseline: 'Translation baseline',
   native_adapted: 'Native-adapted',
 };

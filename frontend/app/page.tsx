@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Cpu, FileBarChart2, Languages, ListChecks, Scale, ShieldCheck, EyeOff } from 'lucide-react';
+import { ArrowRight, Cpu, Database, FileBarChart2, Languages, ListChecks, Scale, ShieldCheck, UploadCloud } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import CoverageGrid from '@/components/shared/CoverageGrid';
 import GradientBackgroundLoader from '@/components/shared/GradientBackgroundLoader';
@@ -9,25 +9,25 @@ const PIPELINE = [
     n: '01',
     icon: ListChecks,
     title: 'Prompt Builder',
-    body: 'Pulls pre-baked translation and native-adapted prompts for the selected languages and categories.',
+    body: 'Builds English seed, translation-baseline, and native-adapted prompt sets from seeded or uploaded datasets.',
   },
   {
     n: '02',
     icon: Cpu,
     title: 'Execution Agent',
-    body: 'Sends each prompt to the target model or RAG endpoint, with retries and latency timing.',
+    body: 'Runs prompts through registered Fireworks models, or imports AMD ROCm/vLLM notebook result JSON.',
   },
   {
     n: '03',
     icon: Scale,
     title: 'Judge Agent',
-    body: 'Keyword pre-filter, then an LLM judge labels each response against a fixed rubric.',
+    body: 'Uses a GPT-based multilingual judge with a rule fallback to label refusals, partial compliance, and unsafe completions.',
   },
   {
     n: '04',
     icon: FileBarChart2,
     title: 'Reporting Agent',
-    body: 'Aggregates results into the dashboard metrics and a shareable PDF report.',
+    body: 'Stores results in the database, then aggregates safety score, risk heatmaps, and model-level reports.',
   },
 ];
 
@@ -35,20 +35,20 @@ const FEATURES = [
   {
     icon: Languages,
     accent: 'brand' as const,
-    title: 'Dual-track by design',
-    body: 'Every prompt is tested both as a machine translation and as a native speaker would actually phrase it — the gap between the two is the finding.',
+    title: 'Three-track comparison',
+    body: 'Audits English seed prompts beside translation-baseline and native-adapted South Asian prompts, so regressions are visible by track.',
   },
   {
-    icon: ShieldCheck,
+    icon: UploadCloud,
     accent: 'teal' as const,
-    title: 'Built for RAG, not just chat',
-    body: 'Out-of-scope refusals are scored correctly for retrieval-grounded targets instead of being penalized as evasive.',
+    title: 'Bring your own dataset',
+    body: 'Upload a validated JSON dataset after deployment; Chaukidar stores it in the database and uses it in future audits.',
   },
   {
-    icon: EyeOff,
+    icon: Database,
     accent: 'pink' as const,
-    title: 'Nothing unsafe rendered by default',
-    body: 'Raw model responses are stored for the audit trail but stay behind an explicit internal-only toggle in the UI.',
+    title: 'Production-ready seed path',
+    body: 'When the production database is empty, a sanitized demo dataset seeds automatically so the live app starts with real records.',
   },
 ];
 
@@ -80,6 +80,15 @@ const ACCENT_CLASSES = {
 };
 
 const FEATURE_TILT = ['-rotate-[0.6deg]', 'rotate-0', 'rotate-[0.6deg]'];
+
+const LANGUAGE_COVERAGE = [
+  { english: 'English', local: 'English', urdu: 'انگریزی' },
+  { english: 'Urdu', local: 'اردو', urdu: 'اردو' },
+  { english: 'Punjabi', local: 'پنجابی', urdu: 'پنجابی' },
+  { english: 'Pashto', local: 'پښتو', urdu: 'پشتو' },
+  { english: 'Sindhi', local: 'سنڌي', urdu: 'سندھی' },
+];
+
 export default function LandingPage() {
   return (
     <>
@@ -99,17 +108,17 @@ export default function LandingPage() {
                 <span className="text-brand">Does it refuse them in Urdu?</span>
               </h1>
               <p className="text-legible mt-5 max-w-md text-[15px] leading-relaxed text-ink-soft">
-                Chaukidar audits language models and RAG systems across Urdu,
-                Punjabi, Pashto, and Sindhi — comparing a translated
-                baseline against native-adapted prompts so safety gaps
-                outside English don&rsquo;t stay invisible.
+                Chaukidar audits language models across English, Urdu,
+                Punjabi, Pashto, and Sindhi — comparing English seed,
+                translated baseline, and native-adapted prompts so safety
+                gaps outside English don&rsquo;t stay invisible.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/audits/new"
                   className="group inline-flex items-center gap-2 rounded-sm bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-soft"
                 >
-                  Run a sample audit
+                  Run an audit
                   <ArrowRight size={15} className="transition group-hover:translate-x-0.5" />
                 </Link>
                 <Link
@@ -122,6 +131,30 @@ export default function LandingPage() {
             </div>
             <div className="animate-rise" style={{ animationDelay: '120ms' }}>
               <CoverageGrid />
+            </div>
+          </div>
+        </section>
+
+
+        {/* Language coverage */}
+        <section className="border-b border-line bg-paper">
+          <div className="mx-auto max-w-shell px-6 py-16">
+            <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div>
+                <span className="font-mono text-xs uppercase tracking-wider text-brand">Language coverage</span>
+                <h2 className="mt-2 font-display text-xl font-bold text-ink">Five-language audit surface</h2>
+              </div>
+              <p className="max-w-xl text-sm leading-relaxed text-ink-soft">
+                The seeded demo dataset covers every harm category, while uploaded datasets extend the same database-backed prompt pool for future audits.
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-5">
+              {LANGUAGE_COVERAGE.map((language) => (
+                <div key={language.english} className="rounded-lg border border-line bg-paper-raised p-4">
+                  <div className="font-display text-sm font-bold text-ink">{language.english}</div>
+                  <div className="mt-1 text-sm text-ink-soft">{language.urdu}</div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -218,7 +251,7 @@ export default function LandingPage() {
           <div className="h-[3px] w-full bg-gradient-to-r from-brand via-accent-pink to-accent-teal opacity-70" />
           <div className="mx-auto flex max-w-shell flex-col items-center justify-between gap-3 px-6 py-8 text-xs text-ink-faint sm:flex-row">
             <span>Chaukidar — built for the AMD Developer Hackathon.</span>
-            <span className="font-mono">Inference on AMD ROCm / MI300X</span>
+            <span className="font-mono">AMD ROCm/vLLM imports + Fireworks live audits</span>
           </div>
         </footer>
       </main>
