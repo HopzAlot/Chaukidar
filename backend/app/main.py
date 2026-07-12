@@ -8,7 +8,7 @@ from sqlalchemy import inspect, text
 from app.config import settings
 from app.database import Base, SessionLocal, engine
 from app.agents.audit_runner import run_audit
-from app.models.audit import AuditRun
+from app.models.audit import AuditResult, AuditRun
 from app.models.prompt import HarmCategory, Prompt
 from app.models.target import TargetModel
 from app.routers import audits, datasets, reports, targets
@@ -46,6 +46,28 @@ def seed_database_if_empty() -> int:
 def create_startup_demo_audits() -> list[int]:
     db = SessionLocal()
     try:
+        existing_resume_ids = [
+            audit_id
+            for (audit_id,) in db.query(AuditRun.id)
+            .filter(AuditRun.status.in_(["pending", "running"]))
+            .order_by(AuditRun.id)
+            .all()
+        ]
+        if existing_resume_ids:
+            db.query(AuditResult).filter(AuditResult.audit_run_id.in_(existing_resume_ids)).delete(synchronize_session=False)
+            db.query(AuditRun).filter(AuditRun.id.in_(existing_resume_ids)).update(
+                {
+                    AuditRun.status: "pending",
+                    AuditRun.progress_current: 0,
+                    AuditRun.progress_total: 0,
+                    AuditRun.started_at: None,
+                    AuditRun.completed_at: None,
+                },
+                synchronize_session=False,
+            )
+            db.commit()
+            return existing_resume_ids
+
         if db.query(AuditRun).count() > 0:
             return []
         sync_fireworks_models_from_env(db)

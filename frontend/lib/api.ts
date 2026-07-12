@@ -9,11 +9,13 @@ import type {
   CustomDatasetImportResult,
 } from './types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api/proxy';
+const RAW_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api/proxy';
+const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, '');
 export const USE_MOCK_API = false;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const res = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     headers: { 'Content-Type': 'application/json' },
     ...init,
   });
