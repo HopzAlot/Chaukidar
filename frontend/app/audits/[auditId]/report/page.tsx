@@ -122,6 +122,7 @@ function ReportPreview({ report, results }: { report: Report; results: AuditResu
           <thead>
             <tr className="border-b border-line text-left font-mono text-[10px] uppercase tracking-wide text-ink-faint">
               <th className="py-2 pr-3">Language</th>
+              <th className="py-2 pr-3">English seed</th>
               <th className="py-2 pr-3">Translation baseline</th>
               <th className="py-2 pr-3">Native-adapted</th>
               <th className="py-2 pr-3">Overall</th>
@@ -131,6 +132,7 @@ function ReportPreview({ report, results }: { report: Report; results: AuditResu
             {byLanguage.map((row) => (
               <tr key={row.lang.code} className="border-b border-line/70">
                 <td className="py-2 pr-3 text-ink-soft">{row.lang.label}</td>
+                <td className="py-2 pr-3 font-mono font-tabular text-ink">{row.englishRisk}</td>
                 <td className="py-2 pr-3 font-mono font-tabular text-ink">{row.translationRisk}</td>
                 <td className="py-2 pr-3 font-mono font-tabular text-ink">{row.nativeRisk}</td>
                 <td className="py-2 pr-3 font-mono font-tabular text-ink">{row.avg}</td>

@@ -4,6 +4,10 @@ Chaukidar is a multilingual AI safety audit platform for South Asian languages. 
 
 Built for **AMD Developer Hackathon ACT II, Track 3 / Unicorn Track**.
 
+## Live Demo
+
+Public demo URL: https://chaukidar.vercel.app/
+
 ## Why This Problem
 
 Most AI safety testing is still English-heavy. That leaves a real gap for users in South Asia, where people often mix English, Urdu, Punjabi, Pashto, Sindhi, Roman Urdu, and culturally specific phrasing in the same conversation.
@@ -81,7 +85,7 @@ examples/amd_audit_results_sample.json
 
 Near the end of the project, the AMD Dev Cloud notebook became unreliable and got stuck around **90% while loading the notebook**. Because of that, we could not complete additional AMD notebook experiments such as larger multi-model ROCm runs, heavier dataset sweeps, or testing multiple Chaukidar agents directly on AMD GPUs before submission.
 
-The completed AMD ROCm/vLLM batched inference run remains documented in the repository and was imported into Chaukidar for reporting. Screenshot evidence is documented in `docs/amd-evidence.md`.
+The completed AMD ROCm/vLLM batched inference run remains documented in the repository and was imported into Chaukidar for reporting. Screenshot evidence is available in the `docs/` folder and cataloged in `docs/amd-evidence.md`.
 
 ## Fireworks Usage
 

@@ -80,12 +80,14 @@ export function getCategoryRiskData(metrics: ResultMetrics) {
   }));
 }
 
-export function getTranslationNativeData(metrics: ResultMetrics) {
+export function getTrackComparisonData(metrics: ResultMetrics) {
   return LANGUAGES.map((lang) => {
+    const englishRisk = averageRisk(metrics.byLanguageTrack[languageTrackKey(lang.code, 'english_seed')]);
     const translationRisk = averageRisk(metrics.byLanguageTrack[languageTrackKey(lang.code, 'translation_baseline')]);
     const nativeRisk = averageRisk(metrics.byLanguageTrack[languageTrackKey(lang.code, 'native_adapted')]);
     return {
       language: lang.label,
+      englishRisk,
       translationRisk,
       nativeRisk,
       delta: nativeRisk - translationRisk,
@@ -97,6 +99,7 @@ export function getLanguageReportRows(metrics: ResultMetrics) {
   return LANGUAGES.map((lang) => ({
     lang,
     avg: averageRisk(metrics.byLanguage[lang.code]),
+    englishRisk: averageRisk(metrics.byLanguageTrack[languageTrackKey(lang.code, 'english_seed')]),
     translationRisk: averageRisk(metrics.byLanguageTrack[languageTrackKey(lang.code, 'translation_baseline')]),
     nativeRisk: averageRisk(metrics.byLanguageTrack[languageTrackKey(lang.code, 'native_adapted')]),
   }));

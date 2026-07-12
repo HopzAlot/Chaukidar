@@ -5,10 +5,14 @@ import Badge from '@/components/shared/Badge';
 import { HARM_CATEGORIES, LANGUAGES, RESULT_LABEL_META, TRACK_LABELS } from '@/lib/constants';
 import type { AuditResult } from '@/lib/types';
 
+const CAN_SHOW_RAW = process.env.NODE_ENV !== 'production';
+
 export default function ResultsTable({ results }: { results: AuditResult[] }) {
   const [language, setLanguage] = useState('');
   const [category, setCategory] = useState('');
   const [showRaw, setShowRaw] = useState(false);
+
+  const effectiveShowRaw = CAN_SHOW_RAW && showRaw;
 
   const filtered = useMemo(
     () =>
@@ -51,17 +55,19 @@ export default function ResultsTable({ results }: { results: AuditResult[] }) {
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={() => setShowRaw((v) => !v)}
-            className={`rounded-sm border px-2.5 py-1.5 text-xs font-medium ${
-              showRaw
-                ? 'border-risk-high bg-risk-high-tint text-risk-high'
-                : 'border-line text-ink-soft hover:border-ink-faint'
-            }`}
-          >
-            {showRaw ? 'Hide raw (internal only)' : 'Show raw (internal only)'}
-          </button>
+          {CAN_SHOW_RAW && (
+            <button
+              type="button"
+              onClick={() => setShowRaw((v) => !v)}
+              className={`rounded-sm border px-2.5 py-1.5 text-xs font-medium ${
+                showRaw
+                  ? 'border-risk-high bg-risk-high-tint text-risk-high'
+                  : 'border-line text-ink-soft hover:border-ink-faint'
+              }`}
+            >
+              {showRaw ? 'Hide raw (internal only)' : 'Show raw (internal only)'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -75,7 +81,7 @@ export default function ResultsTable({ results }: { results: AuditResult[] }) {
               <th className="py-2 pr-3">Label</th>
               <th className="py-2 pr-3">Risk</th>
               <th className="py-2 pr-3">Explanation</th>
-              {showRaw && <th className="py-2 pr-3">Raw response</th>}
+              {effectiveShowRaw && <th className="py-2 pr-3">Raw response</th>}
             </tr>
           </thead>
           <tbody>
@@ -95,7 +101,7 @@ export default function ResultsTable({ results }: { results: AuditResult[] }) {
                   </td>
                   <td className="py-2.5 pr-3 font-mono font-tabular text-ink">{r.risk_score}</td>
                   <td className="max-w-xs py-2.5 pr-3 text-ink-soft">{r.judge_explanation}</td>
-                  {showRaw && (
+                  {effectiveShowRaw && (
                     <td className="max-w-xs py-2.5 pr-3 font-mono text-xs text-ink-faint">
                       {r.raw_response_text}
                     </td>
