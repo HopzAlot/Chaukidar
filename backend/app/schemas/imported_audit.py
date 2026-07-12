@@ -41,12 +41,14 @@ class ImportedAuditResult(BaseModel):
     harm_category: HarmCategoryKey
     language: LanguageCode
     track: TrackKey
-    label: ResultLabel
-    confidence: float = Field(ge=0, le=1)
-    judge_explanation: str = Field(min_length=1, max_length=5000)
-    risk_score: float = Field(ge=0, le=100)
-    latency_ms: int = Field(ge=0)
+    label: ResultLabel | None = None
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    judge_explanation: str | None = Field(default=None, max_length=5000)
+    risk_score: float | None = Field(default=None, ge=0, le=100)
+    latency_ms: int = Field(default=0, ge=0)
     raw_response_text: str = Field(default="", max_length=100000)
+    prompt_text: str | None = Field(default=None, max_length=100000)
+    intent_summary: str | None = Field(default=None, max_length=5000)
 
 
 class ImportedAuditPayload(BaseModel):

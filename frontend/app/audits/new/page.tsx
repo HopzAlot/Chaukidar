@@ -29,6 +29,7 @@ export default function NewAuditPage() {
   const [error, setError] = useState<string | null>(null);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+  const [rejudgeImported, setRejudgeImported] = useState(true);
   const [customDataset, setCustomDataset] = useState<CustomDatasetPayload | null>(null);
   const [customDatasetFileName, setCustomDatasetFileName] = useState<string | null>(null);
   const [customDatasetStatus, setCustomDatasetStatus] = useState<CustomDatasetImportResult | null>(null);
@@ -141,7 +142,7 @@ export default function NewAuditPage() {
         throw new Error('JSON file must be smaller than 20 MB.');
       }
       const payload: unknown = JSON.parse(await importFile.text());
-      const run = await importAmdAudit(payload);
+      const run = await importAmdAudit(payload, { rejudgeImported });
       router.push(`/audits/${run.id}/results`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Unable to import audit JSON.');
@@ -192,6 +193,18 @@ export default function NewAuditPage() {
                 onChange={(event) => setImportFile(event.target.files?.[0] ?? null)}
                 className="block w-full text-sm text-ink-soft file:mr-4 file:rounded-sm file:border-0 file:bg-brand-tint file:px-4 file:py-2 file:text-sm file:font-medium file:text-brand"
               />
+              <label className="mt-4 flex items-start gap-3 rounded-md border border-line bg-paper px-4 py-3 text-sm text-ink-soft">
+                <input
+                  type="checkbox"
+                  checked={rejudgeImported}
+                  onChange={(event) => setRejudgeImported(event.target.checked)}
+                  className="mt-1 h-4 w-4 accent-brand"
+                />
+                <span>
+                  <span className="block font-medium text-ink">Re-judge imported responses</span>
+                  <span className="block">Run Chaukidar&apos;s backend judge over the raw AMD notebook responses for consistent multilingual scoring.</span>
+                </span>
+              </label>
             </section>
             {error && (
               <p className="rounded-md border border-risk-high bg-risk-high-tint px-4 py-3 text-sm text-risk-high">{error}</p>

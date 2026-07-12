@@ -97,9 +97,21 @@ def list_audits(db: Session = Depends(get_db)):
 
 
 @router.post("/import", response_model=AuditRunRead)
-def import_amd_audit(payload: ImportedAuditPayload, db: Session = Depends(get_db)):
+async def import_amd_audit(
+    payload: ImportedAuditPayload,
+    rejudge_imported: bool = False,
+    db: Session = Depends(get_db),
+):
     try:
-        audit = import_audit_payload(db, payload, provider_override="amd_notebook")
+        audit = await import_audit_payload(
+            db,
+            payload,
+            provider_override="amd_notebook",
+            rejudge_imported=rejudge_imported,
+        )
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception:
         db.rollback()
         raise

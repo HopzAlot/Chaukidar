@@ -98,6 +98,8 @@ Screenshot evidence is documented in `docs/amd-evidence.md`.
 
 Fireworks is used for broader hosted model comparison and for the primary LLM judge. This lets Chaukidar compare multiple stronger models while AMD compute remains the required Track 3 compute proof path.
 
+AMD imports can be stored as-is or re-judged by the backend judge during import. Re-judging is recommended when the notebook JSON only contains raw model responses or when you want consistent multilingual scoring across AMD and Fireworks runs. Future AMD notebook exports should include `prompt_text` so the judge has full context.
+
 Typical Fireworks usage:
 
 - run the same dataset against multiple hosted models

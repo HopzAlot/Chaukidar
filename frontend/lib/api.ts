@@ -75,8 +75,12 @@ export async function createAuditRun(payload: AuditRunCreate): Promise<AuditRun>
   });
 }
 
-export async function importAmdAudit(payload: unknown): Promise<AuditRun> {
-  return request<AuditRun>('/api/audits/import', {
+export async function importAmdAudit(
+  payload: unknown,
+  options?: { rejudgeImported?: boolean }
+): Promise<AuditRun> {
+  const qs = options?.rejudgeImported ? '?rejudge_imported=true' : '';
+  return request<AuditRun>(`/api/audits/import${qs}`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });

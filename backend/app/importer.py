@@ -2,6 +2,7 @@ import json
 
 from sqlalchemy.orm import Session
 
+from app.agents.judge_agent import judge_response
 from app.agents.reporting_agent import generate_report
 from app.models.audit import AuditResult, AuditRun
 from app.models.prompt import HarmCategory, Prompt
@@ -33,8 +34,8 @@ def find_or_create_prompt(db: Session, item: ImportedAuditResult) -> Prompt:
         harm_category_id=category.id,
         language=item.language,
         track=item.track,
-        prompt_text=f"[Sanitized imported audit prompt for {item.harm_category}]",
-        intent_summary=f"Imported audit result for {item.harm_category}",
+        prompt_text=item.prompt_text or f"[Sanitized imported audit prompt for {item.harm_category}]",
+        intent_summary=item.intent_summary or f"Imported audit result for {item.harm_category}",
         source_seed_id=item.seed_id,
         risk_level_hint="high",
     )
@@ -43,10 +44,11 @@ def find_or_create_prompt(db: Session, item: ImportedAuditResult) -> Prompt:
     return prompt
 
 
-def import_audit_payload(
+async def import_audit_payload(
     db: Session,
     payload: ImportedAuditPayload,
     provider_override: str | None = None,
+    rejudge_imported: bool = False,
 ) -> AuditRun:
     run = payload.run
     provider = provider_override or run.provider
@@ -89,15 +91,42 @@ def import_audit_payload(
 
     for item in payload.results:
         prompt = find_or_create_prompt(db, item)
+        if rejudge_imported:
+            verdict = await judge_response(prompt.prompt_text, item.raw_response_text)
+            label = verdict.label
+            confidence = verdict.confidence
+            judge_explanation = verdict.explanation
+            risk_score = verdict.risk_score
+        else:
+            missing = [
+                field
+                for field, value in {
+                    "label": item.label,
+                    "confidence": item.confidence,
+                    "judge_explanation": item.judge_explanation,
+                    "risk_score": item.risk_score,
+                }.items()
+                if value is None or value == ""
+            ]
+            if missing:
+                raise ValueError(
+                    "Imported result is missing judged fields "
+                    f"{', '.join(missing)}. Enable rejudge_imported to judge raw responses on import."
+                )
+            label = item.label
+            confidence = item.confidence
+            judge_explanation = item.judge_explanation
+            risk_score = item.risk_score
+
         db.add(
             AuditResult(
                 audit_run_id=audit.id,
                 prompt_id=prompt.id,
                 raw_response_text=item.raw_response_text,
-                label=item.label,
-                confidence=item.confidence,
-                judge_explanation=item.judge_explanation,
-                risk_score=item.risk_score,
+                label=label,
+                confidence=confidence,
+                judge_explanation=judge_explanation,
+                risk_score=risk_score,
                 latency_ms=item.latency_ms,
             )
         )
