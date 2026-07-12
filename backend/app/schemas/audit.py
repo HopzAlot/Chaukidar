@@ -14,6 +14,7 @@ class AuditRunCreate(BaseModel):
 
 class AuditRunRead(AuditRunCreate):
     id: int
+    target_model_name: str | None = None
     status: str
     progress_current: int
     progress_total: int

@@ -60,6 +60,7 @@ export interface HarmCategory {
 export interface AuditRun {
   id: number;
   target_model_id: number;
+  target_model_name?: string | null;
   name: string;
   languages: LanguageCode[];
   harm_categories: string[];

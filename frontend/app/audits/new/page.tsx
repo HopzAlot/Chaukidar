@@ -9,14 +9,15 @@ import LanguageSelector from '@/components/audit/LanguageSelector';
 import TargetModelForm from '@/components/audit/TargetModelForm';
 import { HARM_CATEGORIES, LANGUAGES } from '@/lib/constants';
 import { createAuditRun, importAmdAudit, registerTargetModel, startAuditRun } from '@/lib/api';
-import type { LanguageCode, TargetModelCreate } from '@/lib/types';
+import type { TargetSelection } from '@/components/audit/TargetModelForm';
+import type { LanguageCode } from '@/lib/types';
 
 export default function NewAuditPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'fireworks' | 'amd_import'>('fireworks');
 
   const [name, setName] = useState('');
-  const [target, setTarget] = useState<TargetModelCreate | { existingId: number } | null>(null);
+  const [target, setTarget] = useState<TargetSelection | null>(null);
   const [languages, setLanguages] = useState<LanguageCode[]>(LANGUAGES.map((l) => l.code));
   const [categories, setCategories] = useState<string[]>(HARM_CATEGORIES.map((c) => c.key));
   const [includeTranslation, setIncludeTranslation] = useState(true);
@@ -26,9 +27,17 @@ export default function NewAuditPage() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
 
+  const selectedTargetCount = target
+    ? 'existing' in target
+      ? target.existing.length
+      : target.create.name.trim().length > 0
+        ? 1
+        : 0
+    : 0;
+
   const canSubmit =
     name.trim().length > 0 &&
-    target !== null &&
+    selectedTargetCount > 0 &&
     languages.length > 0 &&
     categories.length > 0 &&
     (includeTranslation || includeNative);
@@ -38,22 +47,26 @@ export default function NewAuditPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const targetModelId =
-        'existingId' in target
-          ? target.existingId
-          : (await registerTargetModel(target)).id;
+      const selectedModels =
+        'existing' in target
+          ? target.existing
+          : [await registerTargetModel(target.create)];
 
-      const run = await createAuditRun({
-        target_model_id: targetModelId,
-        name,
-        languages,
-        harm_categories: categories,
-        include_translation_track: includeTranslation,
-        include_native_track: includeNative,
-      });
+      const runs = await Promise.all(
+        selectedModels.map((model) =>
+          createAuditRun({
+            target_model_id: model.id,
+            name,
+            languages,
+            harm_categories: categories,
+            include_translation_track: includeTranslation,
+            include_native_track: includeNative,
+          })
+        )
+      );
 
-      await startAuditRun(run.id);
-      router.push(`/audits/${run.id}/run`);
+      await Promise.all(runs.map((run) => startAuditRun(run.id)));
+      router.push(runs.length === 1 ? `/audits/${runs[0].id}/run` : `/audits/groups/${encodeURIComponent(name)}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
       setSubmitting(false);
@@ -205,7 +218,13 @@ export default function NewAuditPage() {
               onClick={handleSubmit}
               className="rounded-sm bg-brand px-5 py-3 text-sm font-medium text-white transition hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {submitting ? 'Starting audit…' : 'Create Fireworks audit'}
+              {submitting
+                ? selectedTargetCount > 1
+                  ? 'Starting parallel audits...'
+                  : 'Starting audit...'
+                : selectedTargetCount > 1
+                  ? `Create ${selectedTargetCount} parallel audits`
+                  : 'Create Fireworks audit'}
             </button>
           </div>
         </div>

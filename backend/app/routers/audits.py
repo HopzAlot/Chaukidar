@@ -8,15 +8,17 @@ from app.database import SessionLocal, get_db
 from app.importer import import_audit_payload
 from app.models.audit import AuditResult, AuditRun
 from app.models.prompt import HarmCategory, Prompt
+from app.models.target import TargetModel
 from app.schemas.audit import AuditResultRead, AuditRunCreate, AuditRunRead
 from app.schemas.imported_audit import ImportedAuditPayload
 
 router = APIRouter(prefix="/api/audits", tags=["audits"])
 
 
-def serialize_audit(audit: AuditRun) -> dict:
+def serialize_audit(audit: AuditRun, target_name: str | None = None) -> dict:
     return {
         "id": audit.id,
+        "target_model_name": target_name,
         "target_model_id": audit.target_model_id,
         "name": audit.name,
         "languages": json.loads(audit.languages),
@@ -57,6 +59,8 @@ async def run_audit_task(audit_id: int) -> None:
     db = SessionLocal()
     try:
         await run_audit(db, audit_id)
+    except Exception as exc:
+        print(f"Audit task {audit_id} failed: {type(exc).__name__}: {exc}", flush=True)
     finally:
         db.close()
 
@@ -74,13 +78,20 @@ def create_audit(payload: AuditRunCreate, db: Session = Depends(get_db)):
     db.add(audit)
     db.commit()
     db.refresh(audit)
-    return serialize_audit(audit)
+    target = db.get(TargetModel, audit.target_model_id)
+    return serialize_audit(audit, target.name if target else None)
 
 
 @router.get("", response_model=list[AuditRunRead])
 def list_audits(db: Session = Depends(get_db)):
     audits = db.query(AuditRun).order_by(AuditRun.created_at.desc()).all()
-    return [serialize_audit(audit) for audit in audits]
+    target_names = {
+        target.id: target.name
+        for target in db.query(TargetModel).filter(
+            TargetModel.id.in_([audit.target_model_id for audit in audits])
+        ).all()
+    } if audits else {}
+    return [serialize_audit(audit, target_names.get(audit.target_model_id)) for audit in audits]
 
 
 @router.post("/import", response_model=AuditRunRead)
@@ -90,7 +101,8 @@ def import_amd_audit(payload: ImportedAuditPayload, db: Session = Depends(get_db
     except Exception:
         db.rollback()
         raise
-    return serialize_audit(audit)
+    target = db.get(TargetModel, audit.target_model_id)
+    return serialize_audit(audit, target.name if target else None)
 
 
 @router.post("/{audit_id}/run")
@@ -98,8 +110,18 @@ def start_audit(audit_id: int, background_tasks: BackgroundTasks, db: Session = 
     audit = db.get(AuditRun, audit_id)
     if audit is None:
         raise HTTPException(status_code=404, detail="Audit not found")
-    if audit.status != "pending":
-        raise HTTPException(status_code=409, detail=f"Audit is already {audit.status}")
+    if audit.status == "completed":
+        raise HTTPException(status_code=409, detail="Audit is already completed")
+    if audit.status == "running":
+        raise HTTPException(status_code=409, detail="Audit is already running")
+    if audit.status == "failed":
+        db.query(AuditResult).filter(AuditResult.audit_run_id == audit_id).delete()
+        audit.status = "pending"
+        audit.progress_current = 0
+        audit.progress_total = 0
+        audit.started_at = None
+        audit.completed_at = None
+        db.commit()
     background_tasks.add_task(run_audit_task, audit_id)
     return {"status": "started", "audit_id": audit_id}
 
@@ -109,7 +131,8 @@ def get_audit(audit_id: int, db: Session = Depends(get_db)):
     audit = db.get(AuditRun, audit_id)
     if audit is None:
         raise HTTPException(status_code=404, detail="Audit not found")
-    return serialize_audit(audit)
+    target = db.get(TargetModel, audit.target_model_id)
+    return serialize_audit(audit, target.name if target else None)
 
 
 @router.get("/{audit_id}/results", response_model=list[AuditResultRead])
