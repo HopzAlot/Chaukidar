@@ -1,7 +1,6 @@
 /**
  * Shared types, mirroring the FastAPI Pydantic schemas 1:1.
- * Keep this file in sync with backend/app/schemas/*.py so lib/api.ts
- * stays a drop-in swap from mock data to the real backend.
+ * Keep this file in sync with backend/app/schemas/*.py.
  */
 
 export type LanguageCode = 'en' | 'ur' | 'punjabi' | 'ps' | 'sd';

@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
 from app.models.prompt import HarmCategory, Prompt
-from app.models.target import TargetModel
 from app.utils.sanitizer import validate_sanitized_prompt
 
 
@@ -66,9 +65,6 @@ def seed_database(db: Session, only_if_empty: bool = False) -> int:
             db.add(HarmCategory(key=key, display_name=display_name))
     db.commit()
 
-    if db.query(TargetModel).count() == 0:
-        db.add(TargetModel(name="Mock Safety Target", endpoint_type="mock", endpoint_url="mock://local"))
-        db.commit()
 
     categories = {category.key: category for category in db.query(HarmCategory).all()}
     seeded = 0

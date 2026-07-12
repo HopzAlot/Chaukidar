@@ -14,21 +14,11 @@ npm run dev
 
 Open http://localhost:3000.
 
-By default the app runs entirely on **mock data** (`NEXT_PUBLIC_USE_MOCK_API=true`
-in `.env.example`), so you can build and demo the UI before the FastAPI
-backend exists.
+By default the app calls the live backend configured in `.env.local`.
 
 ## Connecting the real backend
 
-Every backend call lives in **`lib/api.ts`** — nowhere else. To switch from
-mock data to the live FastAPI service:
-
-1. Set `NEXT_PUBLIC_USE_MOCK_API=false` in `.env.local`.
-2. Set `NEXT_PUBLIC_API_BASE_URL` to your backend URL (e.g. `http://localhost:8000`).
-3. That's it — every page already calls `lib/api.ts`, so no component changes
-   are needed. If CORS is a problem, route through `app/api/proxy/[...path]/route.ts`
-   instead (set `NEXT_PUBLIC_API_BASE_URL=/api/proxy` and `API_BASE_URL` to the
-   real backend).
+Every backend call lives in **`lib/api.ts`** — nowhere else. Set `NEXT_PUBLIC_API_BASE_URL` to your backend URL (for example `http://localhost:8000`) or route through `app/api/proxy/[...path]/route.ts` by setting `NEXT_PUBLIC_API_BASE_URL=/api/proxy` and `API_BASE_URL` to the real backend.
 
 `lib/types.ts` mirrors the backend's Pydantic schemas field-for-field — keep
 the two in sync as the API evolves.
@@ -52,8 +42,7 @@ frontend/
 ├── lib/
 │   ├── api.ts                # ← single integration point with the backend
 │   ├── types.ts               # Mirrors backend Pydantic schemas
-│   ├── constants.ts           # Fixed languages / harm categories
-│   └── mock-data.ts           # Demo data used until the backend is live
+│   └── constants.ts           # Fixed languages / harm categories
 └── styles/globals.css         # Design tokens (CSS variables) + Tailwind
 ```
 
@@ -81,11 +70,4 @@ frontend/
 
 ## PDF download
 
-The report page's "Download PDF" button calls the real backend endpoint
-(`GET /api/audits/{id}/report/pdf`, served by WeasyPrint) once
-`NEXT_PUBLIC_USE_MOCK_API=false`. Until then, in mock mode, it triggers the
-browser's own print dialog (`window.print()`) on the same report content —
-choose "Save as PDF" as the destination. `styles/globals.css` has a
-`@media print` block (`.no-print`, `.print-area`) that hides the nav/sidebar
-and cleans up the printed layout, so this doubles as a real, working export
-with zero extra dependencies either way.
+The report page can use the browser print dialog (`window.print()`) on the same report content; choose "Save as PDF" as the destination. `styles/globals.css` has a `@media print` block (`.no-print`, `.print-area`) that hides the nav/sidebar and cleans up the printed layout.

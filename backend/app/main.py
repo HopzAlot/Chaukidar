@@ -1,11 +1,18 @@
+import asyncio
+import json
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 
 from app.config import settings
 from app.database import Base, SessionLocal, engine
-from app.models.prompt import Prompt
+from app.agents.audit_runner import run_audit
+from app.models.audit import AuditRun
+from app.models.prompt import HarmCategory, Prompt
+from app.models.target import TargetModel
 from app.routers import audits, datasets, reports, targets
+from app.routers.targets import sync_fireworks_models_from_env
 
 Base.metadata.create_all(bind=engine)
 
@@ -22,17 +29,67 @@ def ensure_runtime_schema() -> None:
 ensure_runtime_schema()
 
 
-def seed_database_if_empty() -> None:
+def seed_database_if_empty() -> int:
     db = SessionLocal()
     try:
         if db.query(Prompt).count() > 0:
-            return
+            return 0
         from scripts.seed_db import seed_database
 
         seeded = seed_database(db, only_if_empty=True)
         print(f"Seeded Chaukidar database on startup. Added {seeded} prompts.", flush=True)
+        return seeded
     finally:
         db.close()
+
+
+def create_startup_demo_audits() -> list[int]:
+    db = SessionLocal()
+    try:
+        if db.query(AuditRun).count() > 0:
+            return []
+        sync_fireworks_models_from_env(db)
+        fireworks_targets = (
+            db.query(TargetModel)
+            .filter(TargetModel.endpoint_type == "fireworks")
+            .order_by(TargetModel.id)
+            .all()
+        )
+        if not fireworks_targets or db.query(Prompt).count() == 0:
+            return []
+
+        languages = sorted({language for (language,) in db.query(Prompt.language).distinct().all()})
+        categories = sorted({key for (key,) in db.query(HarmCategory.key).distinct().all()})
+        audit_ids: list[int] = []
+        for target in fireworks_targets:
+            audit = AuditRun(
+                target_model_id=target.id,
+                name=target.name,
+                languages=json.dumps(languages),
+                harm_categories=json.dumps(categories),
+                include_english_track=True,
+                include_translation_track=True,
+                include_native_track=True,
+                status="pending",
+            )
+            db.add(audit)
+            db.flush()
+            audit_ids.append(audit.id)
+        db.commit()
+        return audit_ids
+    finally:
+        db.close()
+
+
+async def run_startup_demo_audits(audit_ids: list[int]) -> None:
+    for audit_id in audit_ids:
+        db = SessionLocal()
+        try:
+            await run_audit(db, audit_id)
+        except Exception as exc:
+            print(f"Startup demo audit {audit_id} failed: {type(exc).__name__}: {exc}", flush=True)
+        finally:
+            db.close()
 
 
 seed_database_if_empty()
@@ -56,6 +113,14 @@ app.include_router(targets.router)
 app.include_router(audits.router)
 app.include_router(datasets.router)
 app.include_router(reports.router)
+
+
+@app.on_event("startup")
+async def bootstrap_demo_audits() -> None:
+    audit_ids = create_startup_demo_audits()
+    if audit_ids:
+        print(f"Created startup demo audits: {audit_ids}", flush=True)
+        asyncio.create_task(run_startup_demo_audits(audit_ids))
 
 
 @app.get("/health")
