@@ -96,6 +96,22 @@ Typical Fireworks usage:
 - use a stronger judge model for multilingual response evaluation
 - retry transient provider failures from the live run UI
 
+## RAG System Relevance
+
+Chaukidar is also useful for RAG systems because retrieval can change a model's safety behavior. A chatbot may refuse an unsafe request in isolation, but behave differently when retrieved documents contain regional wording, user-uploaded content, policy snippets, or noisy knowledge-base passages. Multilingual RAG systems add another risk layer: the unsafe intent may be in Urdu, Punjabi, Pashto, Sindhi, Roman Urdu, or mixed language while retrieved context is in another language.
+
+The current implementation focuses on direct model audits and AMD notebook result imports. RAG endpoint testing was not completed because of time constraints. In practice, adding RAG support would require building our own small RAG system first or connecting to an existing retrieval-backed chatbot endpoint.
+
+A RAG extension would add:
+
+- a small RAG service with document ingestion, embeddings, vector search, and a chat endpoint
+- target registration for that RAG endpoint with endpoint URL, auth, and retrieval scope notes
+- optional upload or connection to a knowledge base
+- prompt execution that sends the audit prompt to the RAG endpoint instead of a plain model endpoint
+- capture of retrieved chunks, citations, and final answer
+- judge prompts that evaluate whether unsafe behavior came from the model, retrieved context, or both
+- report breakdowns for out-of-scope refusal, retrieval leakage, and unsafe context grounding
+
 ## Architecture
 
 ```text

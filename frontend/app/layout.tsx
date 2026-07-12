@@ -18,7 +18,7 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: 'Chaukidar — Multilingual AI Safety Audits',
   description:
-    'Audit AI models and RAG systems for safety in South Asian languages, comparing translated and native-adapted prompts side by side.',
+    'Audit AI models for safety in South Asian languages, comparing translated and native-adapted prompts side by side.',
 };
 
 export default function RootLayout({

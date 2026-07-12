@@ -31,7 +31,6 @@ export interface TargetModel {
   endpoint_type: EndpointType;
   endpoint_url: string;
   api_key_ref: string | null;
-  is_rag: boolean;
   created_at: string;
 }
 
@@ -40,15 +39,8 @@ export interface TargetModelCreate {
   endpoint_type: EndpointType;
   endpoint_url: string;
   api_key_ref?: string | null;
-  is_rag?: boolean;
 }
 
-export interface RagTarget {
-  id: number;
-  target_model_id: number;
-  context_scope_note: string;
-  supports_out_of_scope_refusal: boolean;
-}
 
 export interface HarmCategory {
   id: number;

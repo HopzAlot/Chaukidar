@@ -30,7 +30,6 @@ def sync_fireworks_models_from_env(db: Session) -> None:
                 endpoint_type="fireworks",
                 endpoint_url=settings.fireworks_base_url,
                 api_key_ref=None,
-                is_rag=False,
             )
         )
         changed = True
