@@ -12,6 +12,8 @@ import { createAuditRun, importAmdAudit, importCustomDataset, registerTargetMode
 import type { TargetSelection } from '@/components/audit/TargetModelForm';
 import type { CustomDatasetImportResult, CustomDatasetPayload, LanguageCode } from '@/lib/types';
 
+type FieldErrors = Partial<Record<'name' | 'target' | 'languages' | 'categories' | 'tracks' | 'customDataset', string>>;
+
 export default function NewAuditPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'fireworks' | 'amd_import'>('fireworks');
@@ -32,6 +34,7 @@ export default function NewAuditPage() {
   const [customDatasetStatus, setCustomDatasetStatus] = useState<CustomDatasetImportResult | null>(null);
   const [customDatasetValidating, setCustomDatasetValidating] = useState(false);
   const [customDatasetError, setCustomDatasetError] = useState<string | null>(null);
+  const [validationAttempted, setValidationAttempted] = useState(false);
 
   const selectedTargetCount = target
     ? 'existing' in target
@@ -41,14 +44,21 @@ export default function NewAuditPage() {
         : 0
     : 0;
 
-  const canSubmit =
-    name.trim().length > 0 &&
-    selectedTargetCount > 0 &&
-    languages.length > 0 &&
-    categories.length > 0 &&
-    (includeEnglish || includeTranslation || includeNative) &&
-    !customDatasetValidating &&
-    customDatasetError === null;
+  function getSubmitErrors(): FieldErrors {
+    const errors: FieldErrors = {};
+    if (name.trim().length === 0) errors.name = 'Audit name is required.';
+    if (selectedTargetCount === 0) errors.target = 'Select at least one target model.';
+    if (languages.length === 0) errors.languages = 'Select at least one language.';
+    if (categories.length === 0) errors.categories = 'Select at least one harm category.';
+    if (!includeEnglish && !includeTranslation && !includeNative) errors.tracks = 'Select at least one audit track.';
+    if (customDatasetValidating) errors.customDataset = 'Wait for custom dataset validation to finish.';
+    if (customDatasetError) errors.customDataset = customDatasetError;
+    return errors;
+  }
+
+  const currentSubmitErrors = getSubmitErrors();
+  const fieldErrors = validationAttempted ? currentSubmitErrors : {};
+  const canSubmit = Object.keys(currentSubmitErrors).length === 0;
 
   async function handleCustomDatasetFile(file: File | null) {
     setCustomDataset(null);
@@ -82,7 +92,12 @@ export default function NewAuditPage() {
   }
 
   async function handleSubmit() {
-    if (!canSubmit || !target) return;
+    setValidationAttempted(true);
+    const submitErrors = getSubmitErrors();
+    if (Object.keys(submitErrors).length > 0 || !target) {
+      setError('Fix the highlighted fields before creating an audit.');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -202,8 +217,10 @@ export default function NewAuditPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Pre-launch safety audit — v0.3"
-              className="w-full rounded-md border border-line bg-paper px-3 py-2.5 text-sm"
+              aria-invalid={Boolean(fieldErrors.name)}
+              className={`w-full rounded-md border bg-paper px-3 py-2.5 text-sm ${fieldErrors.name ? 'border-risk-high' : 'border-line'}`}
             />
+            {fieldErrors.name && <p className="mt-2 text-sm text-risk-high">{fieldErrors.name}</p>}
           </section>
 
           <section className="rounded-lg border border-line bg-paper-raised p-6">
@@ -211,11 +228,13 @@ export default function NewAuditPage() {
               Target model
             </h2>
             <TargetModelForm value={target} onChange={setTarget} />
+            {fieldErrors.target && <p className="mt-3 text-sm text-risk-high">{fieldErrors.target}</p>}
           </section>
 
           <section className="rounded-lg border border-line bg-paper-raised p-6">
             <h2 className="mb-3 font-display text-sm font-bold text-ink">Languages</h2>
             <LanguageSelector selected={languages} onChange={setLanguages} />
+            {fieldErrors.languages && <p className="mt-3 text-sm text-risk-high">{fieldErrors.languages}</p>}
           </section>
 
           <section className="rounded-lg border border-line bg-paper-raised p-6">
@@ -223,6 +242,7 @@ export default function NewAuditPage() {
               Harm categories
             </h2>
             <HarmCategorySelector selected={categories} onChange={setCategories} />
+            {fieldErrors.categories && <p className="mt-3 text-sm text-risk-high">{fieldErrors.categories}</p>}
           </section>
 
           <section className="rounded-lg border border-line bg-paper-raised p-6">
@@ -256,6 +276,7 @@ export default function NewAuditPage() {
                 Native-adapted
               </label>
             </div>
+            {fieldErrors.tracks && <p className="mt-3 text-sm text-risk-high">{fieldErrors.tracks}</p>}
           </section>
 
           <section className="rounded-lg border border-line bg-paper-raised p-6">
@@ -281,9 +302,9 @@ export default function NewAuditPage() {
   }
 ]`}</pre>
             {customDatasetValidating && <p className="mt-3 text-sm text-ink-faint">Validating dataset...</p>}
-            {customDatasetError && (
+            {fieldErrors.customDataset && (
               <p className="mt-3 rounded-md border border-risk-high bg-risk-high-tint px-4 py-3 text-sm text-risk-high">
-                {customDatasetFileName ? `${customDatasetFileName}: ` : ''}{customDatasetError}
+                {customDatasetFileName ? `${customDatasetFileName}: ` : ''}{fieldErrors.customDataset}
               </p>
             )}
             {customDatasetStatus && (
@@ -294,17 +315,24 @@ export default function NewAuditPage() {
           </section>
 
           {error && (
-            <p className="rounded-md border border-risk-high bg-risk-high-tint px-4 py-3 text-sm text-risk-high">
-              {error}
-            </p>
+            <div className="rounded-md border border-risk-high bg-risk-high-tint px-4 py-3 text-sm text-risk-high">
+              <p>{error}</p>
+              {validationAttempted && Object.keys(currentSubmitErrors).length > 0 && (
+                <ul className="mt-2 list-disc pl-5">
+                  {Object.values(currentSubmitErrors).map((message) => (
+                    <li key={message}>{message}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
 
           <div className="flex justify-end">
             <button
               type="button"
-              disabled={!canSubmit || submitting}
+              disabled={submitting}
               onClick={handleSubmit}
-              className="rounded-sm bg-brand px-5 py-3 text-sm font-medium text-white transition hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40"
+              className={`rounded-sm bg-brand px-5 py-3 text-sm font-medium text-white transition hover:bg-brand-soft ${!canSubmit ? 'ring-1 ring-risk-high/30' : ''} disabled:cursor-not-allowed disabled:opacity-40`}
             >
               {submitting
                 ? selectedTargetCount > 1

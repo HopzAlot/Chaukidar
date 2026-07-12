@@ -11,40 +11,66 @@ class InferenceResponse:
     latency_ms: int
 
 
+def _collect_strings(value: object) -> list[str]:
+    if isinstance(value, str):
+        return [value] if value.strip() else []
+    if isinstance(value, list):
+        strings: list[str] = []
+        for item in value:
+            strings.extend(_collect_strings(item))
+        return strings
+    if isinstance(value, dict):
+        strings: list[str] = []
+        for item in value.values():
+            strings.extend(_collect_strings(item))
+        return strings
+    return []
+
+
 def _extract_message_text(data: dict) -> str:
     try:
         choice = data["choices"][0]
     except (KeyError, IndexError, TypeError) as exc:
         raise ValueError(f"Fireworks response missing choices: keys={list(data) if isinstance(data, dict) else type(data).__name__}") from exc
 
-    message = choice.get("message") if isinstance(choice, dict) else None
-    if not isinstance(message, dict):
-        text = choice.get("text") if isinstance(choice, dict) else None
-        if isinstance(text, str) and text.strip():
-            return text
-        raise ValueError(f"Fireworks response missing message/text for choice keys={list(choice) if isinstance(choice, dict) else type(choice).__name__}")
+    if not isinstance(choice, dict):
+        raise ValueError(f"Fireworks response choice is not an object: {type(choice).__name__}")
 
-    content = message.get("content")
-    if isinstance(content, str):
-        return content
-    if isinstance(content, list):
-        parts: list[str] = []
-        for item in content:
-            if isinstance(item, dict):
-                value = item.get("text") or item.get("content")
-                if isinstance(value, str):
-                    parts.append(value)
-            elif isinstance(item, str):
-                parts.append(item)
-        if parts:
-            return "\n".join(parts)
+    message = choice.get("message")
+    if isinstance(message, dict):
+        content = message.get("content")
+        if isinstance(content, str) and content.strip():
+            return content
+        if isinstance(content, list):
+            parts = _collect_strings(content)
+            if parts:
+                return "\n".join(parts)
 
-    for fallback_key in ("reasoning_content", "refusal", "output_text"):
-        value = message.get(fallback_key)
+        # Prefer final answer-like fields before reasoning text. GPT-OSS often puts
+        # partial JSON in reasoning_content, which must not be parsed as verdict.
+        for fallback_key in ("output_text", "refusal"):
+            value = message.get(fallback_key)
+            if isinstance(value, str) and value.strip():
+                return value
+
+    text = choice.get("text")
+    if isinstance(text, str) and text.strip():
+        return text
+
+    for key in ("output_text", "content"):
+        value = choice.get(key)
         if isinstance(value, str) and value.strip():
             return value
 
-    raise ValueError(f"Fireworks response message has no usable content. message_keys={list(message)}")
+    strings = _collect_strings(choice)
+    for text_value in strings:
+        if "{" in text_value and "}" in text_value:
+            return text_value
+    for text_value in strings:
+        if text_value.strip():
+            return text_value
+
+    raise ValueError(f"Fireworks response has no usable text. choice_keys={list(choice)}")
 
 
 def _should_retry(exc: Exception) -> bool:
@@ -62,6 +88,9 @@ async def complete(
     api_key: str = "",
     timeout_seconds: int = 60,
     max_retries: int = 3,
+    temperature: float = 0.2,
+    max_tokens: int = 160,
+    response_format: dict | None = None,
 ) -> InferenceResponse:
     started = perf_counter()
     headers = {"Content-Type": "application/json"}
@@ -71,9 +100,11 @@ async def complete(
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt_text}],
-        "temperature": 0.2,
-        "max_tokens": 160,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
     }
+    if response_format is not None:
+        payload["response_format"] = response_format
 
     last_error: Exception | None = None
     async with httpx.AsyncClient(timeout=timeout_seconds) as client:
