@@ -18,7 +18,7 @@ const STATUS_TONE = {
 } as const;
 
 function modelLabel(audit: AuditRun) {
-  return audit.target_model_name ?? `Model #${audit.target_model_id}`;
+  return audit.target_model_name ?? audit.name;
 }
 
 export default function AuditGroupPage() {
@@ -90,7 +90,7 @@ export default function AuditGroupPage() {
                     <Badge tone={STATUS_TONE[audit.status]}>{audit.status}</Badge>
                   </div>
                   <p className="mt-2 text-xs text-ink-faint">
-                    Audit #{audit.id} · {audit.progress_current}/{audit.progress_total || '...'} prompts · {new Date(audit.created_at).toLocaleString()}
+                    {audit.progress_current}/{audit.progress_total || '...'} prompts · {new Date(audit.created_at).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
