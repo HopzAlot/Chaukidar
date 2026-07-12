@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type PointerEvent } from 'react';
 
 type Mode = 'hanging' | 'chasing' | 'returning';
 
@@ -25,8 +25,8 @@ function getSafeDockPosition() {
   const brandMark = document.getElementById('app-brand-mark')?.getBoundingClientRect();
   const brandDock = brandMark
     ? {
-        x: Math.max(margin, Math.round(brandMark.left - 18)),
-        y: Math.min(bottom, Math.max(top - 4, Math.round(brandMark.bottom + 8))),
+        x: Math.max(margin, Math.round(brandMark.left - 22)),
+        y: Math.max(margin, Math.round(brandMark.top + brandMark.height / 2 - DISPLAY_H / 2)),
         side: 'left' as const,
         preferred: true,
       }
@@ -74,6 +74,11 @@ export default function Mascot() {
   const posRef = useRef({ x: -200, y: -200 });
   const initializedRef = useRef(false);
   const safeDockRef = useRef({ x: 14, y: 76, side: 'left' as 'left' | 'right', preferred: false });
+  const manualDockRef = useRef(false);
+  const draggingRef = useRef(false);
+  const dragMovedRef = useRef(false);
+  const suppressClickRef = useRef(false);
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
   const lastDockCheckRef = useRef(0);
   const mouseRef = useRef({ x: -9999, y: -9999 });
   const jumpStartRef = useRef<number | null>(null);
@@ -154,7 +159,7 @@ export default function Mascot() {
 
     function frame() {
       const now = Date.now();
-      if (now - lastDockCheckRef.current >= DOCK_CHECK_MS) {
+      if (!manualDockRef.current && now - lastDockCheckRef.current >= DOCK_CHECK_MS) {
         const nextDock = getSafeDockPosition();
         safeDockRef.current = nextDock;
         lastDockCheckRef.current = now;
@@ -233,6 +238,65 @@ export default function Mascot() {
     };
   }, []);
 
+  function clampDockPosition(x: number, y: number) {
+    return {
+      x: Math.min(Math.max(8, x), Math.max(8, window.innerWidth - DISPLAY_W - 8)),
+      y: Math.min(Math.max(8, y), Math.max(8, window.innerHeight - DISPLAY_H - 8)),
+    };
+  }
+
+  function setManualDock(x: number, y: number) {
+    const next = clampDockPosition(x, y);
+    const side = next.x + DISPLAY_W / 2 > window.innerWidth / 2 ? 'right' as const : 'left' as const;
+    manualDockRef.current = true;
+    safeDockRef.current = { ...next, side, preferred: true };
+    posRef.current = next;
+    setBubbleOnLeft(side === 'right');
+    if (outerRef.current) {
+      outerRef.current.style.transform = `translate3d(${next.x}px, ${next.y}px, 0)`;
+    }
+  }
+
+  function handlePointerDown(event: PointerEvent<HTMLButtonElement>) {
+    if (modeRef.current !== 'hanging') return;
+    draggingRef.current = true;
+    dragMovedRef.current = false;
+    dragOffsetRef.current = {
+      x: event.clientX - posRef.current.x,
+      y: event.clientY - posRef.current.y,
+    };
+    setBubbleVisible(false);
+    setSaluting(false);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handlePointerMove(event: PointerEvent<HTMLButtonElement>) {
+    if (!draggingRef.current) return;
+    const nextX = event.clientX - dragOffsetRef.current.x;
+    const nextY = event.clientY - dragOffsetRef.current.y;
+    if (Math.hypot(nextX - safeDockRef.current.x, nextY - safeDockRef.current.y) > 3) {
+      dragMovedRef.current = true;
+    }
+    setManualDock(nextX, nextY);
+    event.preventDefault();
+  }
+
+  function handlePointerUp(event: PointerEvent<HTMLButtonElement>) {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    if (dragMovedRef.current) {
+      suppressClickRef.current = true;
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+    }
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture can already be gone if the browser cancelled it.
+    }
+  }
+
   function handleMouseEnter() {
     if (mode !== 'hanging') return;
     hoverTimerRef.current = setTimeout(() => {
@@ -246,6 +310,7 @@ export default function Mascot() {
     setSaluting(false);
   }
   function handleClick() {
+    if (suppressClickRef.current) return;
     if (mode !== 'hanging') return;
     setBubbleVisible(false);
     setSaluting(false);
@@ -283,9 +348,13 @@ export default function Mascot() {
             type="button"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
             onClick={handleClick}
             aria-label="Poke the Chaukidar mascot"
-            className="block cursor-pointer select-none bg-transparent p-0 leading-none outline-offset-4"
+            className="block cursor-grab select-none bg-transparent p-0 leading-none outline-offset-4 active:cursor-grabbing"
             style={{ pointerEvents: interactive ? 'auto' : 'none', width: DISPLAY_W, height: DISPLAY_H }}
           >
             <svg
