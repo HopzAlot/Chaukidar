@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from sqlalchemy import inspect, text
 
-from app.database import Base, engine
+from app.database import Base, SessionLocal, engine
+from app.models.prompt import Prompt
 from app.routers import audits, datasets, reports, targets
 
 Base.metadata.create_all(bind=engine)
@@ -17,6 +18,22 @@ def ensure_runtime_schema() -> None:
 
 
 ensure_runtime_schema()
+
+
+def seed_database_if_empty() -> None:
+    db = SessionLocal()
+    try:
+        if db.query(Prompt).count() > 0:
+            return
+        from scripts.seed_db import seed_database
+
+        seeded = seed_database(db, only_if_empty=True)
+        print(f"Seeded Chaukidar database on startup. Added {seeded} prompts.", flush=True)
+    finally:
+        db.close()
+
+
+seed_database_if_empty()
 
 app = FastAPI(
     title="Chaukidar API",
