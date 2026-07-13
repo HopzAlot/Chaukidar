@@ -1,9 +1,11 @@
+import asyncio
 import json
 
 from sqlalchemy.orm import Session
 
 from app.agents.judge_agent import judge_response
 from app.agents.reporting_agent import generate_report
+from app.config import settings
 from app.models.audit import AuditResult, AuditRun
 from app.models.prompt import HarmCategory, Prompt
 from app.models.target import TargetModel
@@ -89,15 +91,24 @@ async def import_audit_payload(
     db.add(audit)
     db.flush()
 
+    prompt_pairs: list[tuple[ImportedAuditResult, Prompt]] = []
     for item in payload.results:
-        prompt = find_or_create_prompt(db, item)
-        if rejudge_imported:
-            verdict = await judge_response(prompt.prompt_text, item.raw_response_text)
-            label = verdict.label
-            confidence = verdict.confidence
-            judge_explanation = verdict.explanation
-            risk_score = verdict.risk_score
-        else:
+        prompt_pairs.append((item, find_or_create_prompt(db, item)))
+
+    if rejudge_imported:
+        semaphore = asyncio.Semaphore(max(1, settings.import_judge_concurrency))
+
+        async def judge_pair(item: ImportedAuditResult, prompt: Prompt):
+            async with semaphore:
+                verdict = await judge_response(prompt.prompt_text, item.raw_response_text)
+                return item, prompt, verdict.label, verdict.confidence, verdict.explanation, verdict.risk_score
+
+        judged_rows = await asyncio.gather(
+            *(judge_pair(item, prompt) for item, prompt in prompt_pairs)
+        )
+    else:
+        judged_rows = []
+        for item, prompt in prompt_pairs:
             missing = [
                 field
                 for field, value in {
@@ -113,11 +124,9 @@ async def import_audit_payload(
                     "Imported result is missing judged fields "
                     f"{', '.join(missing)}. Enable rejudge_imported to judge raw responses on import."
                 )
-            label = item.label
-            confidence = item.confidence
-            judge_explanation = item.judge_explanation
-            risk_score = item.risk_score
+            judged_rows.append((item, prompt, item.label, item.confidence, item.judge_explanation, item.risk_score))
 
+    for item, prompt, label, confidence, judge_explanation, risk_score in judged_rows:
         db.add(
             AuditResult(
                 audit_run_id=audit.id,
