@@ -11,6 +11,7 @@ from app.models.prompt import HarmCategory, Prompt
 from app.models.target import TargetModel
 from app.schemas.audit import AuditResultRead, AuditRunCreate, AuditRunRead
 from app.schemas.imported_audit import ImportedAuditPayload
+from app.utils.timezone import to_karachi_time
 
 router = APIRouter(prefix="/api/audits", tags=["audits"])
 
@@ -29,9 +30,9 @@ def serialize_audit(audit: AuditRun, target_name: str | None = None) -> dict:
         "status": audit.status,
         "progress_current": audit.progress_current,
         "progress_total": audit.progress_total,
-        "started_at": audit.started_at,
-        "completed_at": audit.completed_at,
-        "created_at": audit.created_at,
+        "started_at": to_karachi_time(audit.started_at),
+        "completed_at": to_karachi_time(audit.completed_at),
+        "created_at": to_karachi_time(audit.created_at),
     }
 
 
@@ -52,7 +53,7 @@ def serialize_result(result: AuditResult, prompt: Prompt | None, category: HarmC
         "judge_explanation": result.judge_explanation,
         "risk_score": result.risk_score,
         "latency_ms": result.latency_ms,
-        "created_at": result.created_at,
+        "created_at": to_karachi_time(result.created_at),
     }
 
 

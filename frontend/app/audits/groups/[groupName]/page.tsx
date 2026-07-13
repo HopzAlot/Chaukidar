@@ -9,6 +9,7 @@ import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { listAuditRuns, startAuditRun } from '@/lib/api';
 import { useAsyncResource } from '@/hooks/useAsyncResource';
+import { formatDateTime } from '@/lib/datetime';
 import { displayModelName } from '@/lib/model-label';
 import type { AuditRun } from '@/lib/types';
 
@@ -23,6 +24,14 @@ function modelLabel(audit: AuditRun) {
   return displayModelName(audit.target_model_name ?? audit.name);
 }
 
+function isAmdImportedRun(audit: AuditRun) {
+  return audit.name.startsWith('AMD ROCm vLLM Audit - ');
+}
+
+function auditGroupKey(audit: AuditRun) {
+  return isAmdImportedRun(audit) ? `amd-import-${audit.id}` : audit.name;
+}
+
 export default function AuditGroupPage() {
   const params = useParams<{ groupName: string }>();
   const groupName = decodeURIComponent(params.groupName);
@@ -35,10 +44,13 @@ export default function AuditGroupPage() {
 
   const runs = useMemo(
     () => (audits ?? [])
-      .filter((audit) => audit.name === groupName)
+      .filter((audit) => auditGroupKey(audit) === groupName)
       .sort((a, b) => modelLabel(a).localeCompare(modelLabel(b))),
     [audits, groupName]
   );
+  const title = runs.length > 0 && isAmdImportedRun(runs[0])
+    ? `${modelLabel(runs[0])} · ${formatDateTime(runs[0].created_at)}`
+    : displayModelName(runs[0]?.name ?? groupName);
 
   async function handleRetry(auditId: number) {
     setRetryingIds((ids) => [...ids, auditId]);
@@ -65,9 +77,9 @@ export default function AuditGroupPage() {
             <ArrowLeft size={15} /> Audit groups
           </Link>
           <span className="block font-mono text-xs uppercase tracking-wider text-brand">Audit group</span>
-          <h1 className="mt-2 font-display text-2xl font-bold text-ink">{displayModelName(groupName)}</h1>
+          <h1 className="mt-2 font-display text-2xl font-bold text-ink">{title}</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            One run per model, grouped under this experiment name.
+            Normal audits are grouped by experiment name. AMD notebook imports are kept as separate captured runs.
           </p>
         </div>
 
@@ -89,7 +101,7 @@ export default function AuditGroupPage() {
                     <Badge tone={STATUS_TONE[audit.status]}>{audit.status}</Badge>
                   </div>
                   <p className="mt-2 text-xs text-ink-faint">
-                    {audit.progress_current}/{audit.progress_total || '...'} prompts · {new Date(audit.created_at).toLocaleString()}
+                    {audit.progress_current}/{audit.progress_total || '...'} prompts · {formatDateTime(audit.created_at)}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">

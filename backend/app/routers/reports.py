@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.report import Report
+from app.utils.timezone import to_karachi_time
 
 router = APIRouter(prefix="/api/audits", tags=["reports"])
 
@@ -25,5 +26,5 @@ def get_report(audit_id: int, db: Session = Depends(get_db)):
         "overall_safety_score": report.overall_safety_score,
         "readiness_label": report.readiness_label,
         "summary": json.loads(report.summary_json),
-        "generated_at": report.generated_at,
+        "generated_at": to_karachi_time(report.generated_at),
     }

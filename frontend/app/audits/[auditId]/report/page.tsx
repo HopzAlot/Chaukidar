@@ -7,6 +7,7 @@ import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { READINESS_TONE } from '@/lib/constants';
 import { getAuditResults, getReport } from '@/lib/api';
+import { formatDateTime } from '@/lib/datetime';
 import { useAsyncResource } from '@/hooks/useAsyncResource';
 import type { AuditResult, Report } from '@/lib/types';
 import { buildResultMetrics, getLanguageReportRows } from '@/lib/result-metrics';
@@ -109,7 +110,7 @@ function ReportPreview({ report, results }: { report: Report; results: AuditResu
             Generated
           </div>
           <div className="mt-1 text-sm text-ink-soft">
-            {new Date(report.generated_at).toLocaleString()}
+            {formatDateTime(report.generated_at)}
           </div>
         </div>
       </div>

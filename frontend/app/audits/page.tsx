@@ -8,6 +8,7 @@ import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { listAuditRuns } from '@/lib/api';
 import { useAsyncResource } from '@/hooks/useAsyncResource';
+import { formatDateTime, toClientDate } from '@/lib/datetime';
 import { displayModelName } from '@/lib/model-label';
 import type { AuditRun } from '@/lib/types';
 
@@ -25,21 +26,47 @@ function groupStatus(audits: AuditRun[]): AuditRun['status'] {
   return 'completed';
 }
 
+function isAmdImportedRun(audit: AuditRun) {
+  return audit.name.startsWith('AMD ROCm vLLM Audit - ');
+}
+
+function auditGroupKey(audit: AuditRun) {
+  return isAmdImportedRun(audit) ? `amd-import-${audit.id}` : audit.name;
+}
+
+function latestCreatedAt(runs: AuditRun[]) {
+  return runs.reduce((latest, audit) => {
+    const auditDate = toClientDate(audit.created_at)?.getTime() ?? 0;
+    const latestDate = toClientDate(latest)?.getTime() ?? 0;
+    return auditDate > latestDate ? audit.created_at : latest;
+  }, runs[0].created_at);
+}
+
+function groupTitle(name: string, runs: AuditRun[]) {
+  if (runs.length === 1 && isAmdImportedRun(runs[0])) {
+    return `${displayModelName(runs[0].target_model_name ?? runs[0].name)} · ${formatDateTime(runs[0].created_at)}`;
+  }
+  return displayModelName(name);
+}
+
 export default function AuditsPage() {
   const { data: audits, error, loading } = useAsyncResource(listAuditRuns, []);
 
   const groups = useMemo(() => {
     if (!audits) return [];
-    const byName = new Map<string, AuditRun[]>();
+    const byGroup = new Map<string, AuditRun[]>();
     for (const audit of audits) {
-      byName.set(audit.name, [...(byName.get(audit.name) ?? []), audit]);
+      const key = auditGroupKey(audit);
+      byGroup.set(key, [...(byGroup.get(key) ?? []), audit]);
     }
-    return Array.from(byName.entries()).map(([name, runs]) => ({
-      name,
+    return Array.from(byGroup.entries()).map(([key, runs]) => ({
+      key,
+      name: runs[0].name,
+      title: groupTitle(runs[0].name, runs),
       runs,
       status: groupStatus(runs),
-      createdAt: runs.reduce((latest, audit) => audit.created_at > latest ? audit.created_at : latest, runs[0].created_at),
-    })).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      createdAt: latestCreatedAt(runs),
+    })).sort((a, b) => (toClientDate(b.createdAt)?.getTime() ?? 0) - (toClientDate(a.createdAt)?.getTime() ?? 0));
   }, [audits]);
 
   return (
@@ -63,8 +90,8 @@ export default function AuditsPage() {
         <div className="space-y-3">
           {groups.map((group) => (
             <Link
-              key={group.name}
-              href={`/audits/groups/${encodeURIComponent(group.name)}`}
+              key={group.key}
+              href={`/audits/groups/${encodeURIComponent(group.key)}`}
               className="flex items-center justify-between gap-4 rounded-lg border border-line bg-paper-raised p-5 transition hover:border-brand/40"
             >
               <div className="flex min-w-0 items-start gap-3">
@@ -73,11 +100,11 @@ export default function AuditsPage() {
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="truncate font-display text-sm font-bold text-ink">{displayModelName(group.name)}</h2>
+                    <h2 className="truncate font-display text-sm font-bold text-ink">{group.title}</h2>
                     <Badge tone={STATUS_TONE[group.status]}>{group.status}</Badge>
                   </div>
                   <p className="mt-2 text-xs text-ink-faint">
-                    {group.runs.length} model {group.runs.length === 1 ? 'run' : 'runs'} · {new Date(group.createdAt).toLocaleString()}
+                    {group.runs.length} model {group.runs.length === 1 ? 'run' : 'runs'} · {formatDateTime(group.createdAt)}
                   </p>
                 </div>
               </div>
