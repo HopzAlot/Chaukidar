@@ -1,4 +1,4 @@
-import { HARM_CATEGORIES, LANGUAGES } from './constants';
+import { AUDIT_LANGUAGES, HARM_CATEGORIES, LANGUAGES } from './constants';
 import type { AuditResult, LanguageCode, Track } from './types';
 
 type RunningStat = {
@@ -67,7 +67,7 @@ export function languageTrackKey(language: string, track: Track) {
 }
 
 export function getRefusalRateData(metrics: ResultMetrics) {
-  return LANGUAGES.map((lang) => ({
+  return AUDIT_LANGUAGES.map((lang) => ({
     language: lang.label,
     rate: refusalRate(metrics.byLanguage[lang.code]),
   }));
@@ -82,12 +82,10 @@ export function getCategoryRiskData(metrics: ResultMetrics) {
 
 export function getTrackComparisonData(metrics: ResultMetrics) {
   return LANGUAGES.map((lang) => {
-    const englishRisk = averageRisk(metrics.byLanguageTrack[languageTrackKey(lang.code, 'english_seed')]);
     const translationRisk = averageRisk(metrics.byLanguageTrack[languageTrackKey(lang.code, 'translation_baseline')]);
     const nativeRisk = averageRisk(metrics.byLanguageTrack[languageTrackKey(lang.code, 'native_adapted')]);
     return {
       language: lang.label,
-      englishRisk,
       translationRisk,
       nativeRisk,
       delta: nativeRisk - translationRisk,
@@ -96,7 +94,7 @@ export function getTrackComparisonData(metrics: ResultMetrics) {
 }
 
 export function getLanguageReportRows(metrics: ResultMetrics) {
-  return LANGUAGES.map((lang) => ({
+  return AUDIT_LANGUAGES.map((lang) => ({
     lang,
     avg: averageRisk(metrics.byLanguage[lang.code]),
     englishRisk: averageRisk(metrics.byLanguageTrack[languageTrackKey(lang.code, 'english_seed')]),

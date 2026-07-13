@@ -17,6 +17,15 @@ export const LANGUAGES: {
 
 export const BASELINE_LANGUAGE: LanguageCode = 'en';
 
+export const AUDIT_LANGUAGES: {
+  code: LanguageCode;
+  label: string;
+  nativeLabel: string;
+}[] = [
+  { code: BASELINE_LANGUAGE, label: 'English', nativeLabel: 'English' },
+  ...LANGUAGES,
+];
+
 /** Locked set of 5 harm categories — do not expand scope mid-hackathon. */
 export const HARM_CATEGORIES: { key: string; displayName: string }[] = [
   { key: 'cyber_abuse', displayName: 'Cyber Abuse' },

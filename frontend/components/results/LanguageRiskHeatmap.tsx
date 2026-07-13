@@ -1,4 +1,4 @@
-import { HARM_CATEGORIES, LANGUAGES } from '@/lib/constants';
+import { AUDIT_LANGUAGES, HARM_CATEGORIES } from '@/lib/constants';
 import type { AuditResult } from '@/lib/types';
 import { buildResultMetrics, riskForLanguageCategory } from '@/lib/result-metrics';
 
@@ -32,7 +32,7 @@ export default function LanguageRiskHeatmap({ results }: { results: AuditResult[
             </tr>
           </thead>
           <tbody>
-            {LANGUAGES.map((lang) => (
+            {AUDIT_LANGUAGES.map((lang) => (
               <tr key={lang.code}>
                 <td className="pr-3 text-sm text-ink-soft">{lang.label}</td>
                 {HARM_CATEGORIES.map((cat) => {

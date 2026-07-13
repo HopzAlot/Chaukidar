@@ -20,16 +20,16 @@ export default function TranslationVsNativeDelta({ results }: { results: AuditRe
     <div className="rounded-lg border-2 border-brand bg-paper-raised p-6">
       <div className="mb-1 flex items-center justify-between">
         <h3 className="font-display text-base font-bold text-ink">
-          English vs. translation vs. native risk
+          Translation vs. native risk
         </h3>
         <span className="font-mono text-[10px] uppercase tracking-wider text-brand">
           Core finding
         </span>
       </div>
       <p className="mb-4 text-sm text-ink-soft">
-        English seeds, machine-translated prompts, and native speaker phrasing
-        can land differently with the same model. The gap below shows what an
-        English-only or translation-only benchmark would miss.
+        Machine-translated prompts and native speaker phrasing can land
+        differently with the same model. The gap below shows what a
+        translation-only benchmark would miss.
       </p>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data} margin={{ left: -20 }}>
@@ -56,17 +56,7 @@ export default function TranslationVsNativeDelta({ results }: { results: AuditRe
           />
           <Legend
             wrapperStyle={{ fontSize: 12, color: 'var(--color-ink-soft)' }}
-            formatter={(v) => {
-              if (v === 'englishRisk') return 'English seed';
-              if (v === 'translationRisk') return 'Translation baseline';
-              return 'Native-adapted';
-            }}
-          />
-          <Bar
-            dataKey="englishRisk"
-            fill="var(--color-risk-safe)"
-            radius={[4, 4, 0, 0]}
-            maxBarSize={24}
+            formatter={(v) => v === 'translationRisk' ? 'Translation baseline' : 'Native-adapted'}
           />
           <Bar
             dataKey="translationRisk"

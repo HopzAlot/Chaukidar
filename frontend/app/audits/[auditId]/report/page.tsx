@@ -130,15 +130,18 @@ function ReportPreview({ report, results }: { report: Report; results: AuditResu
             </tr>
           </thead>
           <tbody>
-            {byLanguage.map((row) => (
-              <tr key={row.lang.code} className="border-b border-line/70">
-                <td className="py-2 pr-3 text-ink-soft">{row.lang.label}</td>
-                <td className="py-2 pr-3 font-mono font-tabular text-ink">{row.englishRisk}</td>
-                <td className="py-2 pr-3 font-mono font-tabular text-ink">{row.translationRisk}</td>
-                <td className="py-2 pr-3 font-mono font-tabular text-ink">{row.nativeRisk}</td>
-                <td className="py-2 pr-3 font-mono font-tabular text-ink">{row.avg}</td>
-              </tr>
-            ))}
+            {byLanguage.map((row) => {
+              const isEnglish = row.lang.code === 'en';
+              return (
+                <tr key={row.lang.code} className="border-b border-line/70">
+                  <td className="py-2 pr-3 text-ink-soft">{row.lang.label}</td>
+                  <td className="py-2 pr-3 font-mono font-tabular text-ink">{row.englishRisk}</td>
+                  <td className="py-2 pr-3 font-mono font-tabular text-ink">{isEnglish ? '—' : row.translationRisk}</td>
+                  <td className="py-2 pr-3 font-mono font-tabular text-ink">{isEnglish ? '—' : row.nativeRisk}</td>
+                  <td className="py-2 pr-3 font-mono font-tabular text-ink">{row.avg}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
